@@ -1,6 +1,6 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program, BN } from "@coral-xyz/anchor";
-import { Contract } from "../target/types/contract";
+import { FlowfiEscrow } from "../target/types/flowfi_escrow";
 import {
   PublicKey,
   Keypair,
@@ -19,34 +19,28 @@ import {
 import { assert, expect } from "chai";
 
 
-async function getEscrowPda(
+
+function getEscrowPda(
   programId: PublicKey,
   client: PublicKey,
   dodoInvoiceId: string
-): Promise<[PublicKey, number]> {
- 
+): [PublicKey, number] {
   const idBytes = Buffer.from(dodoInvoiceId).slice(0, 32);
   return PublicKey.findProgramAddressSync(
-    [
-      Buffer.from("escrow"),
-      client.toBuffer(),
-      idBytes,
-    ],
+    [Buffer.from("escrow"), client.toBuffer(), idBytes],
     programId
   );
 }
 
-
-async function getAdvancePda(
+function getAdvancePda(
   programId: PublicKey,
   escrowPda: PublicKey
-): Promise<[PublicKey, number]> {
+): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("advance"), escrowPda.toBuffer()],
     programId
   );
 }
-
 
 async function airdrop(
   connection: anchor.web3.Connection,
@@ -54,107 +48,77 @@ async function airdrop(
   sol = 10
 ): Promise<void> {
   const sig = await connection.requestAirdrop(pubkey, sol * LAMPORTS_PER_SOL);
-  const { blockhash, lastValidBlockHeight } =
-    await connection.getLatestBlockhash();
+  const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
   await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight });
+}
+
+
+function errorCode(err: any): string {
+  return (
+    err?.error?.errorCode?.code ??
+    err?.message ??
+    String(err)
+  );
 }
 
 
 
 describe("FlowFi Escrow Program", () => {
-
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
-  const program = anchor.workspace.contract as Program<Contract>;
+  const program = anchor.workspace.flowfiEscrow as Program<FlowfiEscrow>;
   const conn = provider.connection;
 
 
   const client = Keypair.generate();
   const freelancer = Keypair.generate();
-  const authority = Keypair.generate(); // Backend authority
+  const authority = Keypair.generate();
+  const badActor = Keypair.generate();
 
 
   let usdcMint: PublicKey;
   let clientUsdc: PublicKey;
   let freelancerUsdc: PublicKey;
   let authorityUsdc: PublicKey;
+  let badActorUsdc: PublicKey;
 
-  const INVOICE_ID = "dodo_inv_test_" + Date.now().toString();
-  const AMOUNT = new BN(1_000_000); // 1 USDC (6 decimals)
-  const ADVANCE_AMOUNT = AMOUNT.muln(85).divn(100); // 850_000
+
+  const INVOICE_ID = "inv_" + Date.now().toString();
+  const AMOUNT = new BN(1_000_000);
+  const ADVANCE_AMOUNT = AMOUNT.muln(85).divn(100);
 
   let escrowPda: PublicKey;
-  let escrowBump: number;
   let vaultAta: PublicKey;
   let advancePda: PublicKey;
 
-
   before(async () => {
+    await Promise.all([
+      airdrop(conn, client.publicKey),
+      airdrop(conn, freelancer.publicKey),
+      airdrop(conn, authority.publicKey),
+      airdrop(conn, badActor.publicKey),
+    ]);
 
-    await airdrop(conn, client.publicKey);
-    await airdrop(conn, freelancer.publicKey);
-    await airdrop(conn, authority.publicKey);
+    usdcMint = await createMint(conn, client, client.publicKey, null, 6);
 
+    [clientUsdc, freelancerUsdc, authorityUsdc, badActorUsdc] = await Promise.all([
+      createAssociatedTokenAccount(conn, client, usdcMint, client.publicKey),
+      createAssociatedTokenAccount(conn, freelancer, usdcMint, freelancer.publicKey),
+      createAssociatedTokenAccount(conn, authority, usdcMint, authority.publicKey),
+      createAssociatedTokenAccount(conn, badActor, usdcMint, badActor.publicKey),
+    ]);
 
-    usdcMint = await createMint(
-      conn,
-      client,          // payer
-      client.publicKey, // mintAuthority
-      null,            // freezeAuthority
-      6                // decimals
-    );
+    await mintTo(conn, client, usdcMint, authorityUsdc, client.publicKey, 50_000_000);
 
-    // Create ATAs
-    clientUsdc = await createAssociatedTokenAccount(
-      conn,
-      client,
-      usdcMint,
-      client.publicKey
-    );
-    freelancerUsdc = await createAssociatedTokenAccount(
-      conn,
-      freelancer,
-      usdcMint,
-      freelancer.publicKey
-    );
-    authorityUsdc = await createAssociatedTokenAccount(
-      conn,
-      authority,
-      usdcMint,
-      authority.publicKey
-    );
-
-
-    await mintTo(
-      conn,
-      client,             // payer
-      usdcMint,
-      authorityUsdc,
-      client.publicKey,   // mint authority
-      10_000_000          // 10 USDC
-    );
-
-    // Derive PDAs
-    [escrowPda, escrowBump] = await getEscrowPda(
-      program.programId,
-      client.publicKey,
-      INVOICE_ID
-    );
-
-    vaultAta = await getAssociatedTokenAddress(
-      usdcMint,
-      escrowPda,
-      true 
-    );
-
-    [advancePda] = await getAdvancePda(program.programId, escrowPda);
+    [escrowPda] = getEscrowPda(program.programId, client.publicKey, INVOICE_ID);
+    vaultAta = await getAssociatedTokenAddress(usdcMint, escrowPda, true);
+    [advancePda] = getAdvancePda(program.programId, escrowPda);
   });
 
- 
   describe("initialize_escrow", () => {
-    it("creates escrow with status=Created", async () => {
+    it("creates escrow with status=Created and correct fields", async () => {
       await program.methods
-        .initializeEscrow(INVOICE_ID, AMOUNT, freelancer.publicKey)
+        .initializeEscrow(INVOICE_ID, AMOUNT, freelancer.publicKey, authority.publicKey)
         .accounts({
           client: client.publicKey,
           usdcMint,
@@ -170,6 +134,7 @@ describe("FlowFi Escrow Program", () => {
       const escrow = await program.account.escrowAccount.fetch(escrowPda);
       assert.ok(escrow.client.equals(client.publicKey), "client mismatch");
       assert.ok(escrow.freelancer.equals(freelancer.publicKey), "freelancer mismatch");
+      assert.ok(escrow.authority.equals(authority.publicKey), "authority mismatch");
       assert.equal(escrow.amount.toString(), AMOUNT.toString(), "amount mismatch");
       assert.equal(escrow.dodoInvoiceId, INVOICE_ID, "invoice id mismatch");
       assert.deepEqual(escrow.status, { created: {} }, "status should be Created");
@@ -177,509 +142,433 @@ describe("FlowFi Escrow Program", () => {
       assert.isFalse(escrow.milestoneApproved, "milestoneApproved should be false");
     });
 
-    it(" fails with ZeroAmount when amount = 0", async () => {
-      const altInvoice = "dodo_inv_zero_amount";
-      const [altEscrow] = await getEscrowPda(program.programId, client.publicKey, altInvoice);
-      const altVault = await getAssociatedTokenAddress(usdcMint, altEscrow, true);
-
+    it("fails with ZeroAmount when amount = 0", async () => {
+      const inv = "inv_zero";
+      const [pda] = getEscrowPda(program.programId, client.publicKey, inv);
+      const vlt = await getAssociatedTokenAddress(usdcMint, pda, true);
       try {
         await program.methods
-          .initializeEscrow(altInvoice, new BN(0), freelancer.publicKey)
+          .initializeEscrow(inv, new BN(0), freelancer.publicKey, authority.publicKey)
           .accounts({
-            client: client.publicKey,
-            usdcMint,
-            escrowAccount: altEscrow,
-            vault: altVault,
-            tokenProgram: TOKEN_PROGRAM_ID,
-            associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-            systemProgram: SystemProgram.programId,
+            client: client.publicKey, usdcMint, escrowAccount: pda, vault: vlt,
+            tokenProgram: TOKEN_PROGRAM_ID, associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+            systemProgram: SystemProgram.programId
           } as any)
-          .signers([client])
-          .rpc();
-        assert.fail("Should have thrown ZeroAmount");
+          .signers([client]).rpc();
+        assert.fail("expected ZeroAmount");
       } catch (err: any) {
-        expect(err.message).to.include("ZeroAmount");
+        expect(errorCode(err)).to.include("ZeroAmount");
       }
     });
 
-    it(" fails with InvoiceIdTooLong when ID > 32 chars", async () => {
+    it("fails with InvoiceIdTooLong when ID > 32 chars", async () => {
       const longId = "a".repeat(33);
-      const [altEscrow] = await getEscrowPda(program.programId, client.publicKey, longId);
-      const altVault = await getAssociatedTokenAddress(usdcMint, altEscrow, true);
-
+      const [pda] = getEscrowPda(program.programId, client.publicKey, longId);
+      const vlt = await getAssociatedTokenAddress(usdcMint, pda, true);
       try {
         await program.methods
-          .initializeEscrow(longId, AMOUNT, freelancer.publicKey)
+          .initializeEscrow(longId, AMOUNT, freelancer.publicKey, authority.publicKey)
           .accounts({
-            client: client.publicKey,
-            usdcMint,
-            escrowAccount: altEscrow,
-            vault: altVault,
-            tokenProgram: TOKEN_PROGRAM_ID,
-            associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-            systemProgram: SystemProgram.programId,
+            client: client.publicKey, usdcMint, escrowAccount: pda, vault: vlt,
+            tokenProgram: TOKEN_PROGRAM_ID, associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+            systemProgram: SystemProgram.programId
           } as any)
-          .signers([client])
-          .rpc();
-        assert.fail("Should have thrown InvoiceIdTooLong");
+          .signers([client]).rpc();
+        assert.fail("expected InvoiceIdTooLong");
       } catch (err: any) {
-        expect(err.message).to.include("InvoiceIdTooLong");
+        expect(errorCode(err)).to.include("InvoiceIdTooLong");
       }
     });
   });
-
 
   describe("fund_escrow", () => {
-    it("funds escrow, status transitions to Funded", async () => {
-      await program.methods
-        .fundEscrow()
+    it("funds escrow and transitions status to Funded", async () => {
+      await program.methods.fundEscrow()
         .accounts({
-          authority: authority.publicKey,
-          usdcMint,
-          authorityUsdcAccount: authorityUsdc,
-          escrowAccount: escrowPda,
-          vault: vaultAta,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+          authority: authority.publicKey, usdcMint,
+          authorityUsdcAccount: authorityUsdc, escrowAccount: escrowPda, vault: vaultAta,
+          tokenProgram: TOKEN_PROGRAM_ID, associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
           systemProgram: SystemProgram.programId,
         } as any)
-        .signers([authority])
-        .rpc();
+        .signers([authority]).rpc();
 
       const escrow = await program.account.escrowAccount.fetch(escrowPda);
-      assert.deepEqual(escrow.status, { funded: {} }, "status should be Funded");
+      assert.deepEqual(escrow.status, { funded: {} }, "should be Funded");
 
-      const vaultAccount = await getAccount(conn, vaultAta);
-      assert.equal(
-        vaultAccount.amount.toString(),
-        AMOUNT.toString(),
-        "vault balance should equal escrow amount"
-      );
+      const vault = await getAccount(conn, vaultAta);
+      assert.equal(vault.amount.toString(), AMOUNT.toString(), "vault balance mismatch");
     });
 
-    it(" idempotent — calling fund_escrow a second time is a no-op", async () => {
-      // Should not throw, just return Ok silently.
-      await program.methods
-        .fundEscrow()
+    it("is idempotent — second fund_escrow call is a no-op", async () => {
+      await program.methods.fundEscrow()
         .accounts({
-          authority: authority.publicKey,
-          usdcMint,
-          authorityUsdcAccount: authorityUsdc,
-          escrowAccount: escrowPda,
-          vault: vaultAta,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+          authority: authority.publicKey, usdcMint,
+          authorityUsdcAccount: authorityUsdc, escrowAccount: escrowPda, vault: vaultAta,
+          tokenProgram: TOKEN_PROGRAM_ID, associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
           systemProgram: SystemProgram.programId,
         } as any)
-        .signers([authority])
-        .rpc();
+        .signers([authority]).rpc();
 
-      const vaultAccount = await getAccount(conn, vaultAta);
-      // Balance unchanged — no double transfer.
-      assert.equal(vaultAccount.amount.toString(), AMOUNT.toString());
+      const vault = await getAccount(conn, vaultAta);
+      assert.equal(vault.amount.toString(), AMOUNT.toString(), "balance changed on second call");
+    });
+
+    it("fails with UnauthorizedAuthority when wrong wallet calls fund_escrow", async () => {
+      const inv2 = "inv_auth_" + Date.now().toString().slice(-8);
+      const [esc2] = getEscrowPda(program.programId, client.publicKey, inv2);
+      const vlt2 = await getAssociatedTokenAddress(usdcMint, esc2, true);
+
+      await program.methods
+        .initializeEscrow(inv2, AMOUNT, freelancer.publicKey, authority.publicKey)
+        .accounts({
+          client: client.publicKey, usdcMint, escrowAccount: esc2, vault: vlt2,
+          tokenProgram: TOKEN_PROGRAM_ID, associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId
+        } as any)
+        .signers([client]).rpc();
+
+      try {
+        await program.methods.fundEscrow()
+          .accounts({
+            authority: badActor.publicKey, usdcMint,
+            authorityUsdcAccount: badActorUsdc, escrowAccount: esc2, vault: vlt2,
+            tokenProgram: TOKEN_PROGRAM_ID, associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+            systemProgram: SystemProgram.programId,
+          } as any)
+          .signers([badActor]).rpc();
+        assert.fail("expected UnauthorizedAuthority");
+      } catch (err: any) {
+        expect(errorCode(err)).to.include("UnauthorizedAuthority");
+      }
     });
   });
 
-
   describe("approve_milestone", () => {
-    it(" fails if called by non-client (freelancer)", async () => {
+    it("fails with UnauthorizedClient when freelancer tries to approve", async () => {
       try {
-        await program.methods
-          .approveMilestone()
-          .accounts({
-            client: freelancer.publicKey, // Wrong signer
-            escrowAccount: escrowPda,
-          } as any)
-          .signers([freelancer])
-          .rpc();
-        assert.fail("Should have thrown UnauthorizedClient");
+        await program.methods.approveMilestone()
+          .accounts({ client: freelancer.publicKey, escrowAccount: escrowPda } as any)
+          .signers([freelancer]).rpc();
+        assert.fail("expected UnauthorizedClient");
       } catch (err: any) {
-        // Anchor constraint errors wrap differently - check multiple locations
-        const fullError = String(err?.message || "") + String(err?.error?.errorCode?.code || "") + String(err?.error?.message || "");
-        expect(fullError).to.include("UnauthorizedClient");
+        expect(errorCode(err)).to.include("UnauthorizedClient");
       }
     });
 
-    it("client approves milestone", async () => {
-      await program.methods
-        .approveMilestone()
-        .accounts({
-          client: client.publicKey,
-          escrowAccount: escrowPda,
-        } as any)
-        .signers([client])
-        .rpc();
+    it("client successfully approves milestone", async () => {
+      await program.methods.approveMilestone()
+        .accounts({ client: client.publicKey, escrowAccount: escrowPda } as any)
+        .signers([client]).rpc();
 
       const escrow = await program.account.escrowAccount.fetch(escrowPda);
       assert.isTrue(escrow.milestoneApproved, "milestoneApproved should be true");
     });
   });
 
-
   describe("request_advance", () => {
-    // Use a separate invoice/escrow for advance tests
-    const ADVANCE_INVOICE = "dodo_inv_advance_" + Date.now().toString();
-    let advEscrowPda: PublicKey;
-    let advVaultAta: PublicKey;
-    let advAdvancePda: PublicKey;
+    const ADV_INVOICE = "adv_" + Date.now().toString().slice(-8);
+    let advEscrow: PublicKey;
+    let advVault: PublicKey;
+    let advPda: PublicKey;
 
     before(async () => {
-      [advEscrowPda] = await getEscrowPda(program.programId, client.publicKey, ADVANCE_INVOICE);
-      advVaultAta = await getAssociatedTokenAddress(usdcMint, advEscrowPda, true);
-      [advAdvancePda] = await getAdvancePda(program.programId, advEscrowPda);
-
-      // init + fund
-      await program.methods
-        .initializeEscrow(ADVANCE_INVOICE, AMOUNT, freelancer.publicKey)
-        .accounts({
-          client: client.publicKey,
-          usdcMint,
-          escrowAccount: advEscrowPda,
-          vault: advVaultAta,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          systemProgram: SystemProgram.programId,
-        } as any)
-        .signers([client])
-        .rpc();
+      [advEscrow] = getEscrowPda(program.programId, client.publicKey, ADV_INVOICE);
+      advVault = await getAssociatedTokenAddress(usdcMint, advEscrow, true);
+      [advPda] = getAdvancePda(program.programId, advEscrow);
 
       await program.methods
-        .fundEscrow()
+        .initializeEscrow(ADV_INVOICE, AMOUNT, freelancer.publicKey, authority.publicKey)
         .accounts({
-          authority: authority.publicKey,
-          usdcMint,
-          authorityUsdcAccount: authorityUsdc,
-          escrowAccount: advEscrowPda,
-          vault: advVaultAta,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          systemProgram: SystemProgram.programId,
+          client: client.publicKey, usdcMint, escrowAccount: advEscrow, vault: advVault,
+          tokenProgram: TOKEN_PROGRAM_ID, associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId
         } as any)
-        .signers([authority])
-        .rpc();
+        .signers([client]).rpc();
+
+      await program.methods.fundEscrow()
+        .accounts({
+          authority: authority.publicKey, usdcMint, authorityUsdcAccount: authorityUsdc,
+          escrowAccount: advEscrow, vault: advVault, tokenProgram: TOKEN_PROGRAM_ID,
+          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId
+        } as any)
+        .signers([authority]).rpc();
     });
 
-    it(" fails if called by non-freelancer (client)", async () => {
+    it("fails with UnauthorizedFreelancer when client calls request_advance", async () => {
       try {
-        await program.methods
-          .requestAdvance()
+        await program.methods.requestAdvance()
           .accounts({
-            freelancer: client.publicKey, // Wrong signer
-            usdcMint,
-            escrowAccount: advEscrowPda,
-            vault: advVaultAta,
-            freelancerUsdcAccount: clientUsdc,
-            advanceAccount: advAdvancePda,
-            tokenProgram: TOKEN_PROGRAM_ID,
-            associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+            freelancer: client.publicKey, usdcMint, escrowAccount: advEscrow,
+            vault: advVault, freelancerUsdcAccount: clientUsdc, advanceAccount: advPda,
+            tokenProgram: TOKEN_PROGRAM_ID, associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
             systemProgram: SystemProgram.programId,
           } as any)
-          .signers([client])
-          .rpc();
-        assert.fail("Should have thrown UnauthorizedFreelancer");
+          .signers([client]).rpc();
+        assert.fail("expected UnauthorizedFreelancer");
       } catch (err: any) {
-        expect(err.message).to.include("UnauthorizedFreelancer");
+        expect(errorCode(err)).to.include("UnauthorizedFreelancer");
       }
     });
 
-    it(" freelancer receives 85% advance instantly", async () => {
-      const beforeBalance = (await getAccount(conn, freelancerUsdc)).amount;
+    it("freelancer receives exactly 85% advance instantly", async () => {
+      const before = (await getAccount(conn, freelancerUsdc)).amount;
 
-      await program.methods
-        .requestAdvance()
+      await program.methods.requestAdvance()
         .accounts({
-          freelancer: freelancer.publicKey,
-          usdcMint,
-          escrowAccount: advEscrowPda,
-          vault: advVaultAta,
-          freelancerUsdcAccount: freelancerUsdc,
-          advanceAccount: advAdvancePda,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+          freelancer: freelancer.publicKey, usdcMint, escrowAccount: advEscrow,
+          vault: advVault, freelancerUsdcAccount: freelancerUsdc, advanceAccount: advPda,
+          tokenProgram: TOKEN_PROGRAM_ID, associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
           systemProgram: SystemProgram.programId,
         } as any)
-        .signers([freelancer])
-        .rpc();
+        .signers([freelancer]).rpc();
 
-      const afterBalance = (await getAccount(conn, freelancerUsdc)).amount;
-      const diff = afterBalance - beforeBalance;
-      assert.equal(diff.toString(), ADVANCE_AMOUNT.toString(), "advance amount mismatch");
+      const after = (await getAccount(conn, freelancerUsdc)).amount;
+      assert.equal((after - before).toString(), ADVANCE_AMOUNT.toString(), "advance amount wrong");
 
-      const escrow = await program.account.escrowAccount.fetch(advEscrowPda);
-      assert.isTrue(escrow.advanced, "advanced flag should be true");
+      const escrow = await program.account.escrowAccount.fetch(advEscrow);
+      assert.isTrue(escrow.advanced, "advanced flag not set");
       assert.equal(escrow.advanceAmount.toString(), ADVANCE_AMOUNT.toString());
 
-      const advance = await program.account.advanceAccount.fetch(advAdvancePda);
-      assert.isFalse(advance.repaid, "repaid should be false initially");
+      const advance = await program.account.advanceAccount.fetch(advPda);
+      assert.isFalse(advance.repaid, "repaid should be false");
       assert.equal(advance.advanceAmount.toString(), ADVANCE_AMOUNT.toString());
     });
 
-    it(" fails with AdvanceAlreadyTaken on second advance attempt", async () => {
+    it("fails with AdvanceAlreadyTaken on second advance attempt", async () => {
       try {
-        // Need a fresh AdvancePda derivation — use a throwaway
-        const [fakePda] = await getAdvancePda(program.programId, advEscrowPda);
-        await program.methods
-          .requestAdvance()
+        await program.methods.requestAdvance()
           .accounts({
-            freelancer: freelancer.publicKey,
-            usdcMint,
-            escrowAccount: advEscrowPda,
-            vault: advVaultAta,
-            freelancerUsdcAccount: freelancerUsdc,
-            advanceAccount: fakePda,
-            tokenProgram: TOKEN_PROGRAM_ID,
-            associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+            freelancer: freelancer.publicKey, usdcMint, escrowAccount: advEscrow,
+            vault: advVault, freelancerUsdcAccount: freelancerUsdc, advanceAccount: advPda,
+            tokenProgram: TOKEN_PROGRAM_ID, associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
             systemProgram: SystemProgram.programId,
           } as any)
-          .signers([freelancer])
-          .rpc();
-        assert.fail("Should have thrown AdvanceAlreadyTaken");
+          .signers([freelancer]).rpc();
+        assert.fail("expected AdvanceAlreadyTaken");
       } catch (err: any) {
-        // Either AdvanceAlreadyTaken or account already initialized
-        expect(err.message).to.satisfy(
-          (m: string) =>
-            m.includes("AdvanceAlreadyTaken") || m.includes("already in use")
-        );
+        const code = errorCode(err);
+        expect(
+          code.includes("AdvanceAlreadyTaken") || code.includes("already in use")
+        ).to.be.true;
       }
     });
 
-    it(" repay_advance marks advance as repaid", async () => {
-      await program.methods
-        .repayAdvance()
+    it("repay_advance marks advance as repaid", async () => {
+      await program.methods.repayAdvance()
         .accounts({
-          authority: authority.publicKey,
-          escrowAccount: advEscrowPda,
-          advanceAccount: advAdvancePda,
+          authority: authority.publicKey, escrowAccount: advEscrow, advanceAccount: advPda,
         } as any)
-        .signers([authority])
-        .rpc();
+        .signers([authority]).rpc();
 
-      const advance = await program.account.advanceAccount.fetch(advAdvancePda);
-      assert.isTrue(advance.repaid, "repaid should now be true");
+      const advance = await program.account.advanceAccount.fetch(advPda);
+      assert.isTrue(advance.repaid, "repaid should be true");
+    });
+
+    it("fails with AdvanceAlreadyRepaid on second repay attempt", async () => {
+      try {
+        await program.methods.repayAdvance()
+          .accounts({
+            authority: authority.publicKey, escrowAccount: advEscrow, advanceAccount: advPda,
+          } as any)
+          .signers([authority]).rpc();
+        assert.fail("expected AdvanceAlreadyRepaid");
+      } catch (err: any) {
+        expect(errorCode(err)).to.include("AdvanceAlreadyRepaid");
+      }
     });
   });
-
 
   describe("release_funds", () => {
-    it(" releases vault → freelancer after milestone approval", async () => {
-      const beforeBalance = (await getAccount(conn, freelancerUsdc)).amount;
+    it("releases full vault amount to freelancer after milestone approval", async () => {
+      const before = (await getAccount(conn, freelancerUsdc)).amount;
 
-      await program.methods
-        .releaseFunds()
+      await program.methods.releaseFunds()
         .accounts({
-          authority: authority.publicKey,
-          usdcMint,
-          escrowAccount: escrowPda,
-          vault: vaultAta,
-          freelancerUsdcAccount: freelancerUsdc,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+          authority: authority.publicKey, usdcMint, escrowAccount: escrowPda,
+          vault: vaultAta, freelancerUsdcAccount: freelancerUsdc,
+          tokenProgram: TOKEN_PROGRAM_ID, associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
           systemProgram: SystemProgram.programId,
         } as any)
-        .signers([authority])
-        .rpc();
+        .signers([authority]).rpc();
 
-      const afterBalance = (await getAccount(conn, freelancerUsdc)).amount;
-      const diff = afterBalance - beforeBalance;
-      assert.equal(diff.toString(), AMOUNT.toString(), "full amount should be released");
+      const after = (await getAccount(conn, freelancerUsdc)).amount;
+      assert.equal((after - before).toString(), AMOUNT.toString(), "wrong release amount");
 
       const escrow = await program.account.escrowAccount.fetch(escrowPda);
-      assert.deepEqual(escrow.status, { released: {} }, "status should be Released");
+      assert.deepEqual(escrow.status, { released: {} }, "should be Released");
     });
 
-    it(" fails with EscrowNotFunded on double-release", async () => {
+    it("fails with EscrowNotFunded on double-release", async () => {
       try {
-        await program.methods
-          .releaseFunds()
+        await program.methods.releaseFunds()
           .accounts({
-            authority: authority.publicKey,
-            usdcMint,
-            escrowAccount: escrowPda,
-            vault: vaultAta,
-            freelancerUsdcAccount: freelancerUsdc,
-            tokenProgram: TOKEN_PROGRAM_ID,
-            associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+            authority: authority.publicKey, usdcMint, escrowAccount: escrowPda,
+            vault: vaultAta, freelancerUsdcAccount: freelancerUsdc,
+            tokenProgram: TOKEN_PROGRAM_ID, associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
             systemProgram: SystemProgram.programId,
           } as any)
-          .signers([authority])
-          .rpc();
-        assert.fail("Should have thrown EscrowNotFunded");
+          .signers([authority]).rpc();
+        assert.fail("expected EscrowNotFunded");
       } catch (err: any) {
-        expect(err.message).to.include("EscrowNotFunded");
+        expect(errorCode(err)).to.include("EscrowNotFunded");
+      }
+    });
+
+    it("fails with UnauthorizedAuthority when wrong wallet calls release_funds", async () => {
+      const inv3 = "inv_rel_" + Date.now().toString().slice(-8);
+      const [esc3] = getEscrowPda(program.programId, client.publicKey, inv3);
+      const vlt3 = await getAssociatedTokenAddress(usdcMint, esc3, true);
+
+      await program.methods
+        .initializeEscrow(inv3, AMOUNT, freelancer.publicKey, authority.publicKey)
+        .accounts({
+          client: client.publicKey, usdcMint, escrowAccount: esc3, vault: vlt3,
+          tokenProgram: TOKEN_PROGRAM_ID, associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId
+        } as any)
+        .signers([client]).rpc();
+
+      await program.methods.fundEscrow()
+        .accounts({
+          authority: authority.publicKey, usdcMint, authorityUsdcAccount: authorityUsdc,
+          escrowAccount: esc3, vault: vlt3, tokenProgram: TOKEN_PROGRAM_ID,
+          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId
+        } as any)
+        .signers([authority]).rpc();
+
+      await program.methods.approveMilestone()
+        .accounts({ client: client.publicKey, escrowAccount: esc3 } as any)
+        .signers([client]).rpc();
+
+      const freelancerUsdc3 = await getAssociatedTokenAddress(usdcMint, freelancer.publicKey);
+
+      try {
+        await program.methods.releaseFunds()
+          .accounts({
+            authority: badActor.publicKey, usdcMint, escrowAccount: esc3,
+            vault: vlt3, freelancerUsdcAccount: freelancerUsdc3,
+            tokenProgram: TOKEN_PROGRAM_ID, associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+            systemProgram: SystemProgram.programId,
+          } as any)
+          .signers([badActor]).rpc();
+        assert.fail("expected UnauthorizedAuthority");
+      } catch (err: any) {
+        expect(errorCode(err)).to.include("UnauthorizedAuthority");
       }
     });
   });
 
-
   describe("cancel_escrow", () => {
-    const CANCEL_INVOICE = "dodo_inv_cancel_" + Date.now().toString();
-    let cancelEscrowPda: PublicKey;
-    let cancelVaultAta: PublicKey;
+    const CANCEL_INVOICE = "can_" + Date.now().toString().slice(-8);
+    let cancelEscrow: PublicKey;
+    let cancelVault: PublicKey;
 
     before(async () => {
-      [cancelEscrowPda] = await getEscrowPda(
-        program.programId,
-        client.publicKey,
-        CANCEL_INVOICE
-      );
-      cancelVaultAta = await getAssociatedTokenAddress(usdcMint, cancelEscrowPda, true);
-
-      // Init + fund
-      await program.methods
-        .initializeEscrow(CANCEL_INVOICE, AMOUNT, freelancer.publicKey)
-        .accounts({
-          client: client.publicKey,
-          usdcMint,
-          escrowAccount: cancelEscrowPda,
-          vault: cancelVaultAta,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          systemProgram: SystemProgram.programId,
-        } as any)
-        .signers([client])
-        .rpc();
+      [cancelEscrow] = getEscrowPda(program.programId, client.publicKey, CANCEL_INVOICE);
+      cancelVault = await getAssociatedTokenAddress(usdcMint, cancelEscrow, true);
 
       await program.methods
-        .fundEscrow()
+        .initializeEscrow(CANCEL_INVOICE, AMOUNT, freelancer.publicKey, authority.publicKey)
         .accounts({
-          authority: authority.publicKey,
-          usdcMint,
-          authorityUsdcAccount: authorityUsdc,
-          escrowAccount: cancelEscrowPda,
-          vault: cancelVaultAta,
-          tokenProgram: TOKEN_PROGRAM_ID,
+          client: client.publicKey, usdcMint, escrowAccount: cancelEscrow,
+          vault: cancelVault, tokenProgram: TOKEN_PROGRAM_ID,
           associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          systemProgram: SystemProgram.programId,
+          systemProgram: SystemProgram.programId
         } as any)
-        .signers([authority])
-        .rpc();
+        .signers([client]).rpc();
+
+      await program.methods.fundEscrow()
+        .accounts({
+          authority: authority.publicKey, usdcMint, authorityUsdcAccount: authorityUsdc,
+          escrowAccount: cancelEscrow, vault: cancelVault, tokenProgram: TOKEN_PROGRAM_ID,
+          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId
+        } as any)
+        .signers([authority]).rpc();
     });
 
-    it(" fails if called by freelancer (not client)", async () => {
+    it("fails with UnauthorizedClient when freelancer tries to cancel", async () => {
       try {
-        await program.methods
-          .cancelEscrow(false)
+        await program.methods.cancelEscrow()
           .accounts({
-            client: freelancer.publicKey,
-            usdcMint,
-            clientUsdcAccount: freelancerUsdc,
-            escrowAccount: cancelEscrowPda,
-            vault: cancelVaultAta,
-            tokenProgram: TOKEN_PROGRAM_ID,
-            associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+            client: freelancer.publicKey, usdcMint, clientUsdcAccount: freelancerUsdc,
+            escrowAccount: cancelEscrow, vault: cancelVault, advanceAccount: null,
+            tokenProgram: TOKEN_PROGRAM_ID, associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
             systemProgram: SystemProgram.programId,
           } as any)
-          .signers([freelancer])
-          .rpc();
-        assert.fail("Should have thrown UnauthorizedClient");
+          .signers([freelancer]).rpc();
+        assert.fail("expected UnauthorizedClient");
       } catch (err: any) {
-        // Anchor constraint errors wrap differently - check multiple locations
-        const fullError = String(err?.message || "") + String(err?.error?.errorCode?.code || "") + String(err?.error?.message || "");
-        expect(fullError).to.include("UnauthorizedClient");
+        expect(errorCode(err)).to.include("UnauthorizedClient");
       }
     });
 
-    it(" client cancels funded escrow, receives refund", async () => {
-      const beforeBalance = (await getAccount(conn, clientUsdc)).amount;
+    it("client cancels funded escrow and receives full refund", async () => {
+      const before = (await getAccount(conn, clientUsdc)).amount;
 
-      await program.methods
-        .cancelEscrow(false)
+      await program.methods.cancelEscrow()
         .accounts({
-          client: client.publicKey,
-          usdcMint,
-          clientUsdcAccount: clientUsdc,
-          escrowAccount: cancelEscrowPda,
-          vault: cancelVaultAta,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+          client: client.publicKey, usdcMint, clientUsdcAccount: clientUsdc,
+          escrowAccount: cancelEscrow, vault: cancelVault, advanceAccount: null,
+          tokenProgram: TOKEN_PROGRAM_ID, associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
           systemProgram: SystemProgram.programId,
         } as any)
-        .signers([client])
-        .rpc();
+        .signers([client]).rpc();
 
-      const afterBalance = (await getAccount(conn, clientUsdc)).amount;
-      const diff = afterBalance - beforeBalance;
-      assert.equal(diff.toString(), AMOUNT.toString(), "full refund to client");
+      const after = (await getAccount(conn, clientUsdc)).amount;
+      assert.equal((after - before).toString(), AMOUNT.toString(), "refund amount wrong");
 
-      const escrow = await program.account.escrowAccount.fetch(cancelEscrowPda);
-      assert.deepEqual(escrow.status, { cancelled: {} }, "status should be Cancelled");
+      const escrow = await program.account.escrowAccount.fetch(cancelEscrow);
+      assert.deepEqual(escrow.status, { cancelled: {} }, "should be Cancelled");
     });
 
-    it(" fails with ActiveAdvanceNotRepaid if advance outstanding", async () => {
-      // Create another escrow, fund it, take advance, then try cancel
-      const ACTIVE_ADV_INVOICE = "dodo_inv_active_adv_" + Date.now().toString();
-      const [activeEscrow] = await getEscrowPda(
-        program.programId,
-        client.publicKey,
-        ACTIVE_ADV_INVOICE
-      );
-      const activeVault = await getAssociatedTokenAddress(usdcMint, activeEscrow, true);
-      const [activeAdvancePda] = await getAdvancePda(program.programId, activeEscrow);
+    it("fails with ActiveAdvanceNotRepaid when advance is outstanding", async () => {
+      const ADV_CANCEL_INVOICE = "acan_" + Date.now().toString().slice(-8);
+      const [acEscrow] = getEscrowPda(program.programId, client.publicKey, ADV_CANCEL_INVOICE);
+      const acVault = await getAssociatedTokenAddress(usdcMint, acEscrow, true);
+      const [acAdvPda] = getAdvancePda(program.programId, acEscrow);
 
       await program.methods
-        .initializeEscrow(ACTIVE_ADV_INVOICE, AMOUNT, freelancer.publicKey)
+        .initializeEscrow(ADV_CANCEL_INVOICE, AMOUNT, freelancer.publicKey, authority.publicKey)
         .accounts({
-          client: client.publicKey,
-          usdcMint,
-          escrowAccount: activeEscrow,
-          vault: activeVault,
-          tokenProgram: TOKEN_PROGRAM_ID,
+          client: client.publicKey, usdcMint, escrowAccount: acEscrow, vault: acVault,
+          tokenProgram: TOKEN_PROGRAM_ID, associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId
+        } as any)
+        .signers([client]).rpc();
+
+      await program.methods.fundEscrow()
+        .accounts({
+          authority: authority.publicKey, usdcMint, authorityUsdcAccount: authorityUsdc,
+          escrowAccount: acEscrow, vault: acVault, tokenProgram: TOKEN_PROGRAM_ID,
           associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId
+        } as any)
+        .signers([authority]).rpc();
+
+      await program.methods.requestAdvance()
+        .accounts({
+          freelancer: freelancer.publicKey, usdcMint, escrowAccount: acEscrow,
+          vault: acVault, freelancerUsdcAccount: freelancerUsdc, advanceAccount: acAdvPda,
+          tokenProgram: TOKEN_PROGRAM_ID, associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
           systemProgram: SystemProgram.programId,
         } as any)
-        .signers([client])
-        .rpc();
+        .signers([freelancer]).rpc();
 
-      await program.methods
-        .fundEscrow()
-        .accounts({
-          authority: authority.publicKey,
-          usdcMint,
-          authorityUsdcAccount: authorityUsdc,
-          escrowAccount: activeEscrow,
-          vault: activeVault,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          systemProgram: SystemProgram.programId,
-        } as any)
-        .signers([authority])
-        .rpc();
-
-      await program.methods
-        .requestAdvance()
-        .accounts({
-          freelancer: freelancer.publicKey,
-          usdcMint,
-          escrowAccount: activeEscrow,
-          vault: activeVault,
-          freelancerUsdcAccount: freelancerUsdc,
-          advanceAccount: activeAdvancePda,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          systemProgram: SystemProgram.programId,
-        } as any)
-        .signers([freelancer])
-        .rpc();
-
-      // Now try cancelling without repaying advance
       try {
-        await program.methods
-          .cancelEscrow(false)
+        await program.methods.cancelEscrow()
           .accounts({
-            client: client.publicKey,
-            usdcMint,
-            clientUsdcAccount: clientUsdc,
-            escrowAccount: activeEscrow,
-            vault: activeVault,
-            tokenProgram: TOKEN_PROGRAM_ID,
-            associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+            client: client.publicKey, usdcMint, clientUsdcAccount: clientUsdc,
+            escrowAccount: acEscrow, vault: acVault, advanceAccount: acAdvPda,
+            tokenProgram: TOKEN_PROGRAM_ID, associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
             systemProgram: SystemProgram.programId,
           } as any)
-          .signers([client])
-          .rpc();
-        assert.fail("Should have thrown ActiveAdvanceNotRepaid");
+          .signers([client]).rpc();
+        assert.fail("expected ActiveAdvanceNotRepaid");
       } catch (err: any) {
-        expect(err.message).to.include("ActiveAdvanceNotRepaid");
+        expect(errorCode(err)).to.include("ActiveAdvanceNotRepaid");
       }
     });
   });
