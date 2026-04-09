@@ -8,12 +8,15 @@ skip-lint = false
 [programs.localnet]
 contract = "26KdmFpYTmAauE1JT3sUr1AbUeN6521tT7HWaZx8J2JJ"
 
+[programs.devnet]
+contract = "26KdmFpYTmAauE1JT3sUr1AbUeN6521tT7HWaZx8J2JJ"
+
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "localnet"
-wallet = "~/.config/solana/id.json"
+cluster = "devnet"
+wallet = "local.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 \"tests/**/*.ts\""
