@@ -42,7 +42,11 @@ pub struct CancelEscrow<'info> {
     pub vault: Box<InterfaceAccount<'info, TokenAccount>>,
 
    
-    pub advance_account: Option<Box<Account<'info, AdvanceAccount>>>,
+   #[account(
+    seeds = [b"advance", escrow_account.key().as_ref()],
+    bump,
+)]
+pub advance_account: Option<Box<Account<'info, AdvanceAccount>>>,
 
     pub token_program: Interface<'info, TokenInterface>,
     pub associated_token_program: Program<'info, AssociatedToken>,

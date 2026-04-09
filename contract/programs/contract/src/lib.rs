@@ -6,7 +6,7 @@ pub mod state;
 
 use instructions::*;
 
-declare_id!("EZeiKFbrbUX72yMVPcyU5cKuavYXQNr5Wf3paavJeoNT");
+declare_id!("26KdmFpYTmAauE1JT3sUr1AbUeN6521tT7HWaZx8J2JJ");
 
 #[program]
 pub mod flowfi_escrow {
