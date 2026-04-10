@@ -1,156 +1,243 @@
 "use client";
-import { useWalletConnection } from "@solana/react-hooks";
 
-export default function Home() {
-  const { connectors, connect, disconnect, wallet, status } =
-    useWalletConnection();
+import { motion } from "framer-motion";
+import Link from "next/link";
+import { ArrowRight, Shield, Zap, Globe, Lock } from "lucide-react";
 
-  const address = wallet?.account.address.toString();
-
+export default function LandingPage() {
   return (
-    <div className="relative min-h-screen overflow-x-clip bg-bg1 text-foreground">
-      <main className="relative z-10 mx-auto flex min-h-screen max-w-4xl flex-col gap-10 border-x border-border-low px-6 py-16">
-        <header className="space-y-3">
-          <p className="text-sm uppercase tracking-[0.18em] text-muted">
-            Solana starter kit
-          </p>
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-            Ship a Solana dapp fast
-          </h1>
-          <p className="max-w-3xl text-base leading-relaxed text-muted">
-            Drop in <code className="font-mono">@solana/react-hooks</code>, wrap
-            your tree once, and you get wallet connect/disconnect plus
-            ready-to-use hooks for balances and transactions—no manual RPC
-            wiring.
-          </p>
-          <ul className="mt-4 space-y-2 text-sm text-foreground">
-            <li className="flex gap-2">
-              <span
-                className="mt-1.5 h-2 w-2 rounded-full bg-foreground/60"
-                aria-hidden
-              />
-              <div>
-                <a
-                  className="font-medium underline underline-offset-2"
-                  href="https://solana.com/docs"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Solana docs
-                </a>{" "}
-                — core concepts, RPC, programs, and client patterns.
-              </div>
-            </li>
-            <li className="flex gap-2">
-              <span
-                className="mt-1.5 h-2 w-2 rounded-full bg-foreground/60"
-                aria-hidden
-              />
-              <div>
-                <a
-                  className="font-medium underline underline-offset-2"
-                  href="https://www.anchor-lang.com/docs/introduction"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Anchor docs
-                </a>{" "}
-                — build and test programs with IDL, macros, and type-safe
-                clients.
-              </div>
-            </li>
-            <li className="flex gap-2">
-              <span
-                className="mt-1.5 h-2 w-2 rounded-full bg-foreground/60"
-                aria-hidden
-              />
-              <div>
-                <a
-                  className="font-medium underline underline-offset-2"
-                  href="https://faucet.solana.com/"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Solana faucet (devnet)
-                </a>{" "}
-                — grab free devnet SOL to try transfers and transactions.
-              </div>
-            </li>
-            <li className="flex gap-2">
-              <span
-                className="mt-1.5 h-2 w-2 rounded-full bg-foreground/60"
-                aria-hidden
-              />
-              <div>
-                <a
-                  className="font-medium underline underline-offset-2"
-                  href="https://github.com/solana-foundation/framework-kit/tree/main/packages/react-hooks"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  @solana/react-hooks README
-                </a>{" "}
-                — how this starter wires the client, connectors, and hooks.
-              </div>
-            </li>
-          </ul>
-        </header>
+    <div className="bg-black min-h-screen w-full flex flex-col font-sans selection:bg-white/20 selection:text-white">
 
-        <section className="w-full max-w-3xl space-y-4 rounded-2xl border border-border-low bg-card p-6 shadow-[0_20px_80px_-50px_rgba(0,0,0,0.35)]">
-          <div className="flex items-start justify-between gap-4">
-            <div className="space-y-1">
-              <p className="text-lg font-semibold">Wallet connection</p>
-              <p className="text-sm text-muted">
-                Pick any discovered connector and manage connect / disconnect in
-                one spot.
-              </p>
-            </div>
-            <span className="rounded-full bg-cream px-3 py-1 text-xs font-semibold uppercase tracking-wide text-foreground/80">
-              {status === "connected" ? "Connected" : "Not connected"}
-            </span>
-          </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            {connectors.map((connector) => (
-              <button
-                key={connector.id}
-                onClick={() => connect(connector.id)}
-                disabled={status === "connecting"}
-                className="group flex items-center justify-between rounded-xl border border-border-low bg-card px-4 py-3 text-left text-sm font-medium transition hover:-translate-y-0.5 hover:shadow-sm cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <span className="flex flex-col">
-                  <span className="text-base">{connector.name}</span>
-                  <span className="text-xs text-muted">
-                    {status === "connecting"
-                      ? "Connecting…"
-                      : status === "connected" &&
-                        wallet?.connector.id === connector.id
-                        ? "Active"
-                        : "Tap to connect"}
+      <div className="relative min-h-[100svh] w-full overflow-hidden flex flex-col justify-end bg-black">
+
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+
+          className="absolute inset-0 h-full w-full object-cover z-0"
+        >
+          <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260306_074215_04640ca7-042c-45d6-bb56-58b1e8a42489.mp4" type="video/mp4" />
+        </video>
+
+
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/80 z-[5]"></div>
+
+        <main className="relative z-10 w-full px-6 flex justify-center pb-[200px] md:pb-[250px]">
+
+          <div className="relative flex flex-col items-center text-center max-w-4xl w-full">
+
+            <div className="absolute -top-6 -left-6 h-[5px] w-[5px] bg-white hidden md:block"></div>
+            <div className="absolute -top-6 -right-6 h-[5px] w-[5px] bg-white hidden md:block"></div>
+            <div className="absolute -bottom-6 -left-6 h-[5px] w-[5px] bg-white hidden md:block"></div>
+            <div className="absolute -bottom-6 -right-6 h-[5px] w-[5px] bg-white hidden md:block"></div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="flex flex-col items-center w-full"
+            >
+              {/* Liquid Glass Badge */}
+              <div className="mb-8 inline-flex items-center justify-center p-1 rounded-full bg-white/5 backdrop-blur-sm border border-white/10">
+                <div className="px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md">
+                  <span className="text-xs font-semibold text-white uppercase tracking-[0.15em]">
+                    Powered by Solana & Dodo
                   </span>
-                </span>
-                <span
-                  aria-hidden
-                  className="h-2.5 w-2.5 rounded-full bg-border-low transition group-hover:bg-primary/80"
-                />
-              </button>
+                </div>
+              </div>
+
+              {/* Dynamic Headline */}
+              <div className="flex flex-col leading-[1.1] mb-6">
+                <h1 className="text-4xl md:text-[64px] font-light text-white tracking-tight">
+                  Programmable escrow &
+                </h1>
+                <h2 className="text-4xl md:text-[64px] font-light italic text-white/90 tracking-tight">
+                  instant payment rails
+                </h2>
+              </div>
+
+              {/* Sub-headline */}
+              <p className="max-w-xl text-base md:text-lg text-white/60 font-sans mb-10 leading-relaxed font-light tracking-wide">
+                FlowFi combines decentralized escrow, instant 85% salary advances,
+                and global fiat on-ramps to redefine how freelancers and clients operate globally.
+              </p>
+
+              {/* Sharp Action Buttons */}
+              <div className="flex flex-col sm:flex-row items-center gap-4 w-full justify-center">
+                <Link
+                  href="/client"
+                  className="group flex items-center justify-center gap-2 px-8 py-3.5 bg-white hover:bg-white/90 text-black font-medium transition-colors duration-300 w-full sm:w-auto"
+                  style={{ borderRadius: '2px' }}
+                >
+                  Hire a Freelancer
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </Link>
+                <Link
+                  href="/freelancer"
+                  className="group flex items-center justify-center gap-2 px-8 py-3.5 bg-transparent border border-white/20 hover:bg-white/10 text-white font-medium transition-colors duration-300 w-full sm:w-auto"
+                  style={{ borderRadius: '2px' }}
+                >
+                  Freelancer Hub
+                </Link>
+              </div>
+            </motion.div>
+          </div>
+        </main>
+      </div>
+
+
+      <section className="relative w-full px-6 py-32 bg-black overflow-hidden border-t border-white/5">
+
+
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-orange-500/10 rounded-full blur-[120px] opacity-50 pointer-events-none transform -translate-y-1/2"></div>
+        <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-[150px] opacity-40 pointer-events-none transform translate-y-1/4"></div>
+
+        <div className="max-w-5xl mx-auto relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="mb-20 text-center flex flex-col items-center"
+          >
+            <h3 className="text-4xl md:text-5xl font-light text-white mb-6 tracking-tight">
+              Infrastructure for the <br className="hidden md:block" />
+              <span className="italic text-white/90">global workforce</span>
+            </h3>
+            <p className="text-white/50 max-w-xl text-lg font-light tracking-wide">
+              Bridging the gap between traditional fiat invoicing and high-speed blockchain settlement.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Feature Cards with Corner Accents */}
+            {[
+              {
+                icon: Shield,
+                title: "Programmable Escrow",
+                desc: "Funds are securely locked in Solana smart contracts. Releases are tied to automated milestones, protecting both clients and freelancers."
+              },
+              {
+                icon: Zap,
+                title: "Instant 85% Advances",
+                desc: "Don't wait for net-30 terms. As soon as the client deposits into escrow, workers can instantly draw up to 85% of their payment."
+              },
+              {
+                icon: Globe,
+                title: "Dodo Payments Fiat Rail",
+                desc: "Clients pay in USD via credit cards or bank transfers. We automatically route and convert the fiat into USDC for on-chain settlement."
+              },
+              {
+                icon: Lock,
+                title: "Solana Speed & Low Fees",
+                desc: "Settlements occur at the speed of light for fractions of a penny. Forget wire transfer fees or platform cuts taking 20% of your money."
+              }
+            ].map((feature, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+                className="relative p-10 bg-[#0a0a0a]/80 backdrop-blur-md border border-white/5 hover:border-white/20 transition-all duration-500 group"
+              >
+                {/* Micro Corner Accents */}
+                <div className="absolute -top-[1px] -left-[1px] h-[3px] w-[3px] bg-white/50 group-hover:bg-white transition-colors"></div>
+                <div className="absolute -top-[1px] -right-[1px] h-[3px] w-[3px] bg-white/50 group-hover:bg-white transition-colors"></div>
+                <div className="absolute -bottom-[1px] -left-[1px] h-[3px] w-[3px] bg-white/50 group-hover:bg-white transition-colors"></div>
+                <div className="absolute -bottom-[1px] -right-[1px] h-[3px] w-[3px] bg-white/50 group-hover:bg-white transition-colors"></div>
+
+                <div className="mb-8 p-4 bg-white/[0.03] border border-white/5 inline-flex group-hover:bg-white/[0.05] transition-colors" style={{ borderRadius: '2px' }}>
+                  <feature.icon className="w-6 h-6 text-white/80" strokeWidth={1.5} />
+                </div>
+                <h4 className="text-xl font-light text-white mb-4 tracking-wide">{feature.title}</h4>
+                <p className="text-white/50 font-light leading-relaxed tracking-wide text-sm md:text-base">
+                  {feature.desc}
+                </p>
+              </motion.div>
             ))}
           </div>
+        </div>
+      </section>
 
-          <div className="flex flex-wrap items-center gap-3 border-t border-border-low pt-4 text-sm">
-            <span className="rounded-lg border border-border-low bg-cream px-3 py-2 font-mono text-xs">
-              {address ?? "No wallet connected"}
-            </span>
-            <button
-              onClick={() => disconnect()}
-              disabled={status !== "connected"}
-              className="inline-flex items-center gap-2 rounded-lg border border-border-low bg-card px-3 py-2 font-medium transition hover:-translate-y-0.5 hover:shadow-sm cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              Disconnect
-            </button>
+
+      <section className="relative w-full px-6 py-32 bg-[#050505] border-t border-white/5 overflow-hidden">
+
+        <div className="max-w-5xl mx-auto relative z-10 flex flex-col items-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="mb-24 text-center"
+          >
+            <h3 className="text-3xl md:text-5xl font-light text-white mb-6 tracking-tight">
+              How FlowFi <span className="italic text-white/90">Works</span>
+            </h3>
+            <div className="w-12 h-[1px] bg-white/20 mx-auto"></div>
+          </motion.div>
+
+          <div className="flex flex-col md:flex-row gap-12 md:gap-8 w-full relative">
+            {/* Connecting line for desktop */}
+            <div className="hidden md:block absolute top-8 left-[15%] right-[15%] h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent -z-10"></div>
+
+            {/* Steps */}
+            {[
+              { num: "01", title: "Client Funds Escrow", desc: "Client pays via fiat or crypto. Funds are securely locked in the FlowFi vault." },
+              { num: "02", title: "Freelancer Advance", desc: "Instantly draw down up to 85% of the locked capital before starting the work." },
+              { num: "03", title: "Automated Settlement", desc: "Upon milestone completion, the remaining 15% is released instantly on-chain." }
+            ].map((step, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.2 }}
+                className="flex-1 flex flex-col items-center text-center z-10 group"
+              >
+                <div className="w-16 h-16 bg-black border border-white/10 group-hover:border-white/30 transition-colors flex items-center justify-center text-white/80 font-mono text-sm tracking-widest mb-8 relative" style={{ borderRadius: '2px' }}>
+                  {/* Step Corner Accents */}
+                  <div className="absolute -top-[2px] -left-[2px] h-[4px] w-[4px] bg-white/20 group-hover:bg-white/60"></div>
+                  <div className="absolute -bottom-[2px] -right-[2px] h-[4px] w-[4px] bg-white/20 group-hover:bg-white/60"></div>
+                  {step.num}
+                </div>
+                <h4 className="text-lg font-light text-white mb-3 tracking-wide">{step.title}</h4>
+                <p className="text-white/50 text-sm leading-relaxed px-4 font-light tracking-wide">
+                  {step.desc}
+                </p>
+              </motion.div>
+            ))}
           </div>
-        </section>
-      </main>
+        </div>
+      </section>
+
+
+      <footer className="relative w-full border-t border-white/10 py-32 px-6 flex flex-col items-center bg-black overflow-hidden">
+        {/* Footer Glow */}
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-white/5 rounded-[100%] blur-[100px] pointer-events-none"></div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="relative z-10 flex flex-col items-center text-center"
+        >
+          <h2 className="text-3xl md:text-5xl text-white font-light mb-8 tracking-tight">
+            Ready to upgrade your <span className="italic text-white/90">workflow?</span>
+          </h2>
+          <Link
+            href="/client"
+            className="group flex items-center justify-center gap-2 px-10 py-4 bg-white hover:bg-white/90 text-black font-medium transition-all duration-300 shadow-[0_0_40px_rgba(255,255,255,0.1)] hover:shadow-[0_0_60px_rgba(255,255,255,0.2)]"
+            style={{ borderRadius: '2px' }}
+          >
+            Start Building
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </Link>
+        </motion.div>
+      </footer>
     </div>
   );
 }

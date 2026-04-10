@@ -1,22 +1,27 @@
 import type { Metadata } from "next";
-import { Geist_Mono, Inter } from "next/font/google";
+import { Barlow, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./components/providers";
+import { Navbar } from "./components/Navbar";
 
-const inter = Inter({
-  variable: "--font-inter",
+const barlow = Barlow({
+  variable: "--font-barlow",
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
   display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const instrumentSerif = Instrument_Serif({
+  variable: "--font-instrument",
   subsets: ["latin"],
+  weight: "400",
+  style: ["normal", "italic"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Solana dApp Starter",
-  description: "A minimal Next.js starter powered by @solana/react-hooks",
+  title: "FlowFi | Global Work Payments",
+  description: "Programmable Global Work Payments System",
   icons: {
     icon: "/icon.svg",
     shortcut: "/icon.svg",
@@ -34,8 +39,9 @@ export default function RootLayout({
       <Providers>
         <body
           suppressHydrationWarning
-          className={`${inter.variable} ${geistMono.variable} antialiased`}
+          className={`${barlow.variable} ${instrumentSerif.variable} antialiased`}
         >
+          <Navbar />
           {children}
         </body>
       </Providers>
