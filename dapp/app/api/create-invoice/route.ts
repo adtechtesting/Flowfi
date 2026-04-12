@@ -1,61 +1,78 @@
 import { NextResponse } from "next/server";
 import { dodo } from "@/app/lib/dodo";
 import prisma from "@/app/lib/db";
-import { getEscrowPda, PROGRAM_ID } from "@/app/lib/solana";
+import { backendAuthority } from "@/app/lib/solana/server";
+import { getEscrowPda } from "@/app/lib/solana/constants";
 import { PublicKey } from "@solana/web3.js";
-import { v4 as uuidv4 } from "uuid";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { amount, jobTitle, jobDescription, clientWallet, freelancerWallet } = body;
 
-    // Validate inputs
     if (!amount || !clientWallet || !freelancerWallet || !jobTitle) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Since Dodo Payments requires a product, for MVP we assume 
-    // there's a base product configured in dashboard, but here we 
-    // just pass it. (Alternatively, if amount is dynamic, Dodo might need server-side custom prices)
-    const productId = process.env.NEXT_PUBLIC_DODO_PRODUCT_ID || "prod_dummy";
+    try {
+      new PublicKey(clientWallet);
+      new PublicKey(freelancerWallet);
+    } catch {
+      return NextResponse.json({ error: "Invalid wallet address" }, { status: 400 });
+    }
 
-    // Create Dodo Checkout Session
-    const session = await dodo.checkoutSessions.create({
-      productCart: [{ productId, quantity: 1 }],
-      allowedPaymentMethodTypes: ["crypto", "credit", "debit"],
-      returnUrl: `${process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'}/client?success=true`,
-    });
+    const returnUrl = `${process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'}/client?success=true`;
 
-    const dodoInvoiceId = session.id;
+    let dodoInvoiceId: string;
+    let dodoPaymentUrl: string;
 
-    // Calculate the Solana PDA for Escrow
+    if (dodo) {
+
+      const productId = process.env.DODO_PRODUCT_ID;
+      if (!productId) {
+        return NextResponse.json(
+          { error: "DODO_PRODUCT_ID not set" },
+          { status: 500 }
+        );
+      }
+      const session = await dodo.checkoutSessions.create({
+        product_cart: [{ product_id: productId, quantity: 1 }],
+        return_url: returnUrl,
+      });
+      dodoInvoiceId = session.session_id;
+      dodoPaymentUrl = session.checkout_url || "";
+    } else {
+
+      dodoInvoiceId = "mock_" + Date.now().toString();
+      dodoPaymentUrl = `${returnUrl}&mock=true&invoiceId=${dodoInvoiceId}`;
+    }
+
     const clientPubkey = new PublicKey(clientWallet);
     const [escrowPda] = getEscrowPda(clientPubkey, dodoInvoiceId);
 
-    // Save to Database
     const invoice = await prisma.invoice.create({
       data: {
         dodoInvoiceId,
-        dodoPaymentUrl: session.checkoutUrl,
+        dodoPaymentUrl,
         escrowPubkey: escrowPda.toString(),
         clientWallet,
         freelancerWallet,
         amount,
         jobTitle,
-        jobDescription,
+        jobDescription: jobDescription || "",
+        status: "PENDING",
       },
     });
 
     return NextResponse.json({
       invoiceId: invoice.id,
       dodoInvoiceId,
-      paymentUrl: session.checkoutUrl,
+      paymentUrl: dodoPaymentUrl,
       escrowPubkey: escrowPda.toString(),
+      authorityPubkey: backendAuthority.publicKey.toString(),
+      mockMode: !dodo,
     });
+
   } catch (error: any) {
     console.error("Create Invoice Error:", error);
     return NextResponse.json(

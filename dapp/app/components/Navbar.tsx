@@ -1,14 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useWalletConnection } from "@solana/react-hooks";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { Wallet, Briefcase, Plus, Coins } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 
 export function Navbar() {
-  const { connectors, connect, disconnect, wallet, status } = useWalletConnection();
-  const address = wallet?.account.address.toString();
+  const { wallets, select, disconnect, publicKey, connected } = useWallet();
+  const address = publicKey?.toString();
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   return (
@@ -34,7 +34,7 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-4 relative">
-          {status === "connected" ? (
+          {connected ? (
             <div className="flex items-center gap-3">
               <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 backdrop-blur-md">
                 <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]"></div>
@@ -50,7 +50,6 @@ export function Navbar() {
               </button>
             </div>
           ) : (
-
             <div className="relative flex flex-col items-end">
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -64,23 +63,26 @@ export function Navbar() {
                 <motion.div
                   initial={{ opacity: 0, y: -5 }}
                   animate={{ opacity: 1, y: 0 }}
-
                   className="absolute right-0 top-full mt-2 w-56 rounded-lg border border-white/10 bg-[#121214]/90 backdrop-blur-md p-2 shadow-2xl z-50"
                 >
-
-                  {connectors && connectors.length > 0 ? (
-                    connectors.map((c) => (
+                  {wallets && wallets.length > 0 ? (
+                    wallets.map((w) => (
                       <button
-                        key={c.id}
-                        onClick={() => { connect(c.id); setDropdownOpen(false); }}
+                        key={w.adapter.name}
+                        onClick={() => { select(w.adapter.name); setDropdownOpen(false); }}
                         className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm text-white/80 transition-colors hover:bg-white/10 hover:text-white"
                       >
-                        {c.name}
+                        <img 
+                          src={w.adapter.icon} 
+                          alt={w.adapter.name} 
+                          className="w-4 h-4"
+                        />
+                        {w.adapter.name}
                       </button>
                     ))
                   ) : (
                     <div className="px-3 py-3 text-sm text-center text-white/50">
-                      No wallets detected.
+                      No wallets available.
                     </div>
                   )}
                 </motion.div>

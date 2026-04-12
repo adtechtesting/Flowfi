@@ -8,29 +8,29 @@ datasource db {
 
 model Invoice {
   id               String        @id @default(uuid())
-  dodoInvoiceId    String        @unique // Dodo's payment/session ID
-  dodoPaymentUrl   String? // Checkout URL for client
-  escrowPubkey     String? // Solana escrow PDA (set after init)
-  clientWallet     String // Client's Solana pubkey
-  freelancerWallet String // Freelancer's Solana pubkey
-  amount           Int // Amount in cents (e.g., 100000 = $1000)
+  dodoInvoiceId    String        @unique
+  dodoPaymentUrl   String?
+  escrowPubkey     String?
+  clientWallet     String
+  freelancerWallet String
+  amount           Int
   currency         String        @default("USD")
   status           InvoiceStatus @default(PENDING)
   jobTitle         String
   jobDescription   String?
-  webhookProcessed Boolean       @default(false) // Idempotency flag
-  txSignature      String? // Solana fund_escrow tx hash
-  advanceTxSig     String? // Advance tx hash
+  webhookProcessed Boolean       @default(false)
+  txSignature      String?
+  advanceTxSig     String?
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
 }
 
 enum InvoiceStatus {
-  PENDING // Invoice created, payment link sent
-  PAID // Dodo webhook received, payment confirmed
-  ESCROW_FUNDED // On-chain escrow funded with USDC
-  ADVANCED // Freelancer took advance
-  RELEASED // Funds fully released
-  CANCELLED // Escrow cancelled and refunded
-  FAILED // Something went wrong
+  PENDING
+  PAID
+  ESCROW_FUNDED
+  ADVANCED
+  RELEASED
+  CANCELLED
+  FAILED
 }

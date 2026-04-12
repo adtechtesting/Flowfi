@@ -1,7 +1,7 @@
 {
   "name": "dapp",
   "scripts": {
-    "build": "next build",
+    "build": "prisma generate && next build",
     "ci": "npm run build && npm run lint && npm run format:check",
     "dev": "next dev",
     "format": "prettier --write .",
@@ -22,10 +22,12 @@
   "private": true,
   "dependencies": {
     "@coral-xyz/anchor": "^0.32.1",
+    "@prisma/adapter-pg": "^7.7.0",
     "@prisma/client": "^7.7.0",
     "@solana/client": "^1.2.0",
     "@solana/react-hooks": "^1.1.5",
     "@solana/spl-token": "^0.4.14",
+    "@solana/wallet-adapter-react": "^0.15.39",
     "dodopayments": "^2.27.0",
     "framer-motion": "^12.38.0",
     "lucide-react": "^1.8.0",

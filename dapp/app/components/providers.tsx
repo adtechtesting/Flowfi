@@ -1,15 +1,24 @@
 "use client";
 
-import { SolanaProvider } from "@solana/react-hooks";
+import { useMemo } from "react";
+import { ConnectionProvider, WalletProvider } from "@solana/wallet-adapter-react";
+import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
+import { clusterApiUrl } from "@solana/web3.js";
 import { PropsWithChildren } from "react";
 
-import { autoDiscover, createClient } from "@solana/client";
-
-const client = createClient({
-  endpoint: "https://api.devnet.solana.com",
-  walletConnectors: autoDiscover(),
-});
-
 export function Providers({ children }: PropsWithChildren) {
-  return <SolanaProvider client={client}>{children}</SolanaProvider>;
+
+  const network = WalletAdapterNetwork.Devnet;
+  const endpoint = useMemo(() => process.env.NEXT_PUBLIC_RPC_URL || clusterApiUrl(network), [network]);
+
+
+  const wallets = useMemo(() => [], []);
+
+  return (
+    <ConnectionProvider endpoint={endpoint}>
+      <WalletProvider wallets={wallets} autoConnect>
+        {children}
+      </WalletProvider>
+    </ConnectionProvider>
+  );
 }
