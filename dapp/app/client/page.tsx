@@ -12,7 +12,7 @@ import {
 } from "../lib/solana/client";
 
 export default function ClientDashboard() {
-  const { publicKey, signTransaction, connected } = useWallet();
+  const { publicKey, signTransaction, connected, sendTransaction } = useWallet();
   const { connection } = useConnection();
   const searchParams = useSearchParams();
   const isSuccess = searchParams.get("success") === "true";
@@ -50,7 +50,7 @@ export default function ClientDashboard() {
         body: JSON.stringify({
           jobTitle: formData.jobTitle,
           amount: Math.round(amountUsd * 100),
-          clientWallet: publicKey.toString(),
+          clientWallet: publicKey!.toString(),
           freelancerWallet: formData.freelancerWallet,
         }),
       });
@@ -59,19 +59,19 @@ export default function ClientDashboard() {
       if (!res.ok) throw new Error(data.error || "Failed to create invoice");
 
 
-      const walletAdapter = { publicKey, signTransaction };
+      const walletAdapter = { publicKey: publicKey!, signTransaction: signTransaction! };
       const tx = await buildInitializeEscrowTx(
         connection,
         walletAdapter,
         data.dodoInvoiceId,
         amountUsd,
-        publicKey,
+        publicKey!,
         freelancerPubkey,
         new PublicKey(data.authorityPubkey)
       );
 
 
-      const txId = await signAndSendTx(connection, walletAdapter, tx);
+      const txId = await sendTransaction(tx, connection);
       console.log("Escrow initialized:", txId);
 
 

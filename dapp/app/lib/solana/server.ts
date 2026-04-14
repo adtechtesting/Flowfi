@@ -11,7 +11,6 @@ import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token
 import bs58 from "bs58";
 import { FlowfiEscrow } from "../anchor/flowfi_escrow";
 import {
-  PROGRAM_ID,
   USDC_MINT,
   ESCROW_IDL,
   getEscrowPda,
@@ -20,20 +19,21 @@ import {
   getUserUsdcAta,
 } from "./constants";
 
-
 function requireEnv(key: string): string {
   const val = process.env[key];
   if (!val) throw new Error(`Missing required environment variable: ${key}`);
   return val;
 }
 
+const RPC_URL =
+  process.env.RPC_URL ||
+  process.env.NEXT_PUBLIC_RPC_URL ||
+  "https://api.devnet.solana.com";
 
-const RPC_URL = process.env.RPC_URL || process.env.NEXT_PUBLIC_RPC_URL || "https://api.devnet.solana.com";
 export const serverConnection = new Connection(RPC_URL, {
   commitment: "confirmed",
   confirmTransactionInitialTimeout: 60_000,
 });
-
 
 function loadBackendKeypair(): Keypair {
   const raw = requireEnv("BACKEND_AUTHORITY_SECRET_KEY");
@@ -41,22 +41,19 @@ function loadBackendKeypair(): Keypair {
     return Keypair.fromSecretKey(bs58.decode(raw));
   } catch {
     throw new Error(
-      "BACKEND_AUTHORITY_SECRET_KEY is set but could not be decoded. Expected a base58-encoded 64-byte secret key."
+      "BACKEND_AUTHORITY_SECRET_KEY could not be decoded. Expected base58-encoded 64-byte secret key."
     );
   }
 }
-export const backendAuthority: Keypair = loadBackendKeypair();
 
+export const backendAuthority: Keypair = loadBackendKeypair();
 
 class NodeWallet {
   constructor(readonly payer: Keypair) { }
   get publicKey(): PublicKey { return this.payer.publicKey; }
   async signTransaction<T extends Transaction | VersionedTransaction>(tx: T): Promise<T> {
-    if (tx instanceof Transaction) {
-      tx.partialSign(this.payer);
-    } else {
-      (tx as VersionedTransaction).sign([this.payer]);
-    }
+    if (tx instanceof Transaction) tx.partialSign(this.payer);
+    else (tx as VersionedTransaction).sign([this.payer]);
     return tx;
   }
   async signAllTransactions<T extends Transaction | VersionedTransaction>(txs: T[]): Promise<T[]> {
@@ -67,7 +64,6 @@ class NodeWallet {
     });
   }
 }
-
 
 const provider = new AnchorProvider(
   serverConnection,
@@ -89,7 +85,7 @@ export async function fundEscrow(
   const vault = await getVaultAta(escrowPda);
   const authorityUsdc = await getUserUsdcAta(backendAuthority.publicKey);
 
-  const sig = await serverProgram.methods
+  return serverProgram.methods
     .fundEscrow()
     .accounts({
       authority: backendAuthority.publicKey,
@@ -102,8 +98,6 @@ export async function fundEscrow(
       systemProgram: SystemProgram.programId,
     } as any)
     .rpc();
-
-  return sig;
 }
 
 export async function releaseFunds(
@@ -115,7 +109,7 @@ export async function releaseFunds(
   const vault = await getVaultAta(escrowPda);
   const freelancerUsdc = await getUserUsdcAta(freelancerWallet);
 
-  const sig = await serverProgram.methods
+  return serverProgram.methods
     .releaseFunds()
     .accounts({
       authority: backendAuthority.publicKey,
@@ -128,8 +122,6 @@ export async function releaseFunds(
       systemProgram: SystemProgram.programId,
     } as any)
     .rpc();
-
-  return sig;
 }
 
 export async function repayAdvance(
@@ -139,7 +131,7 @@ export async function repayAdvance(
   const [escrowPda] = getEscrowPda(clientWallet, dodoInvoiceId);
   const [advancePda] = getAdvancePda(escrowPda);
 
-  const sig = await serverProgram.methods
+  return serverProgram.methods
     .repayAdvance()
     .accounts({
       authority: backendAuthority.publicKey,
@@ -147,9 +139,8 @@ export async function repayAdvance(
       advanceAccount: advancePda,
     } as any)
     .rpc();
-
-  return sig;
 }
+
 
 export async function fetchEscrow(
   clientWallet: PublicKey,
@@ -159,6 +150,7 @@ export async function fetchEscrow(
   try {
     return await serverProgram.account.escrowAccount.fetch(escrowPda);
   } catch {
+
     return null;
   }
 }

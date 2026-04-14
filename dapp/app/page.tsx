@@ -44,7 +44,7 @@ export default function LandingPage() {
               <div className="mb-8 inline-flex items-center justify-center p-1 rounded-full bg-white/5 backdrop-blur-sm border border-white/10">
                 <div className="px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md">
                   <span className="text-xs font-semibold text-white uppercase tracking-[0.15em]">
-                    Powered by Solana & Dodo
+                    Powered by Solana
                   </span>
                 </div>
               </div>
@@ -52,17 +52,18 @@ export default function LandingPage() {
               {/* Dynamic Headline */}
               <div className="flex flex-col leading-[1.1] mb-6">
                 <h1 className="text-4xl md:text-[64px] font-light text-white tracking-tight">
-                  Programmable escrow &
+                  Get paid instantly.
+
                 </h1>
                 <h2 className="text-4xl md:text-[64px] font-light italic text-white/90 tracking-tight">
-                  instant payment rails
+                  No more waiting weeks.
                 </h2>
               </div>
 
               {/* Sub-headline */}
               <p className="max-w-xl text-base md:text-lg text-white/60 font-sans mb-10 leading-relaxed font-light tracking-wide">
-                FlowFi combines decentralized escrow, instant 85% salary advances,
-                and global fiat on-ramps to redefine how freelancers and clients operate globally.
+                Clients pay normally.
+                You unlock your earnings instantly , even before the job is done.
               </p>
 
               {/* Sharp Action Buttons */}
@@ -72,7 +73,7 @@ export default function LandingPage() {
                   className="group flex items-center justify-center gap-2 px-8 py-3.5 bg-white hover:bg-white/90 text-black font-medium transition-colors duration-300 w-full sm:w-auto"
                   style={{ borderRadius: '2px' }}
                 >
-                  Hire a Freelancer
+                  Get Paid Now
                   <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Link>
                 <Link
@@ -80,7 +81,7 @@ export default function LandingPage() {
                   className="group flex items-center justify-center gap-2 px-8 py-3.5 bg-transparent border border-white/20 hover:bg-white/10 text-white font-medium transition-colors duration-300 w-full sm:w-auto"
                   style={{ borderRadius: '2px' }}
                 >
-                  Freelancer Hub
+                  Hire & Pay
                 </Link>
               </div>
             </motion.div>

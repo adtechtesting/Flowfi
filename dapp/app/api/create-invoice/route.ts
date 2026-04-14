@@ -1,5 +1,5 @@
+
 import { NextResponse } from "next/server";
-import { dodo } from "@/app/lib/dodo";
 import prisma from "@/app/lib/db";
 import { backendAuthority } from "@/app/lib/solana/server";
 import { getEscrowPda } from "@/app/lib/solana/constants";
@@ -21,30 +21,41 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid wallet address" }, { status: 400 });
     }
 
-    const returnUrl = `${process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'}/client?success=true`;
+    const baseUrl = process.env.NEXT_PUBLIC_URL || "http://localhost:3000";
+    const returnUrl = `${baseUrl}/client?success=true`;
 
     let dodoInvoiceId: string;
     let dodoPaymentUrl: string;
 
-    if (dodo) {
+    const dodoApiKey = process.env.DODO_PAYMENTS_API_KEY;
+    const dodoProductId = process.env.DODO_PRODUCT_ID;
+    const isMock = !dodoApiKey || dodoApiKey === "mock";
 
-      const productId = process.env.DODO_PRODUCT_ID;
-      if (!productId) {
-        return NextResponse.json(
-          { error: "DODO_PRODUCT_ID not set" },
-          { status: 500 }
-        );
-      }
-      const session = await dodo.checkoutSessions.create({
-        product_cart: [{ product_id: productId, quantity: 1 }],
-        return_url: returnUrl,
+    if (!isMock && dodoProductId) {
+
+      const DodoPayments = (await import("dodopayments")).default;
+      const dodo = new DodoPayments({
+        bearerToken: dodoApiKey,
+        environment: "test_mode",
       });
+
+      const session = await dodo.checkoutSessions.create({
+        product_cart: [{ product_id: dodoProductId, quantity: 1 }],
+        return_url: returnUrl,
+        metadata: {
+          clientWallet,
+          freelancerWallet,
+          amountCents: String(amount),
+        },
+      });
+
       dodoInvoiceId = session.session_id;
-      dodoPaymentUrl = session.checkout_url || "";
+      dodoPaymentUrl = session.checkout_url ?? returnUrl;
+
     } else {
 
-      dodoInvoiceId = "mock_" + Date.now().toString();
-      dodoPaymentUrl = `${returnUrl}&mock=true&invoiceId=${dodoInvoiceId}`;
+      dodoInvoiceId = "inv_" + Date.now().toString().slice(-10);
+      dodoPaymentUrl = `${returnUrl}&invoiceId=${dodoInvoiceId}&mock=true`;
     }
 
     const clientPubkey = new PublicKey(clientWallet);
@@ -70,11 +81,11 @@ export async function POST(req: Request) {
       paymentUrl: dodoPaymentUrl,
       escrowPubkey: escrowPda.toString(),
       authorityPubkey: backendAuthority.publicKey.toString(),
-      mockMode: !dodo,
+      mock: isMock,
     });
 
   } catch (error: any) {
-    console.error("Create Invoice Error:", error);
+    console.error("create-invoice error:", error);
     return NextResponse.json(
       { error: error.message || "Failed to create invoice" },
       { status: 500 }

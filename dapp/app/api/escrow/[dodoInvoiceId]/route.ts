@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
 import { fetchEscrow } from "@/app/lib/solana/server";
+import { getEscrowPda } from "@/app/lib/solana/constants";
 import { PublicKey } from "@solana/web3.js";
 
-export async function GET(req: Request, { params }: { params: { dodoInvoiceId: string } }) {
-  const { dodoInvoiceId } = params;
+export async function GET(req: Request, { params }: { params: Promise<{ dodoInvoiceId: string }> }) {
+  const { dodoInvoiceId } = await params;
   if (!dodoInvoiceId) {
     return NextResponse.json({ error: "Missing invoice ID" }, { status: 400 });
   }
@@ -21,23 +22,33 @@ export async function GET(req: Request, { params }: { params: { dodoInvoiceId: s
 
     let onChainEscrow = null;
     let advanceEligible = false;
+    const clientWallet = new PublicKey(invoice.clientWallet);
+    const [escrowPda] = getEscrowPda(clientWallet, dodoInvoiceId);
+    let onChainError = null;
 
     try {
-      const clientWallet = new PublicKey(invoice.clientWallet);
       onChainEscrow = await fetchEscrow(clientWallet, dodoInvoiceId);
 
+      if (onChainEscrow) {
 
-      if (onChainEscrow && Object.keys(onChainEscrow.status)[0] === "funded" && !onChainEscrow.advanced) {
-        advanceEligible = true;
+        const statusKey = Object.keys(onChainEscrow.status)[0].toLowerCase();
+
+
+        if (statusKey === "funded" && !onChainEscrow.advanced) {
+          advanceEligible = true;
+        }
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error("Failed to fetch on-chain escrow:", e);
+      onChainError = e.message || "Unknown on-chain error";
     }
 
     return NextResponse.json({
       invoice,
       onChainEscrow,
-      advanceEligible
+      onChainError,
+      advanceEligible,
+      escrowPubkey: escrowPda.toString()
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || "Failed to fetch escrow" }, { status: 500 });
