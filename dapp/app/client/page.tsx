@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { Plus, Briefcase, Loader2, Info } from "lucide-react";
@@ -8,7 +8,7 @@ import { useSearchParams } from "next/navigation";
 import { PublicKey } from "@solana/web3.js";
 import {
   buildInitializeEscrowTx,
-  signAndSendTx,
+  buildApproveMilestoneTx,
 } from "../lib/solana/client";
 
 export default function ClientDashboard() {
@@ -17,7 +17,91 @@ export default function ClientDashboard() {
   const searchParams = useSearchParams();
   const isSuccess = searchParams.get("success") === "true";
 
+  const [txSuccess, setTxSuccess] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const [jobs, setJobs] = useState<any[]>([]);
+  const [jobsLoading, setJobsLoading] = useState(false);
+
+  useEffect(() => {
+    if (publicKey) loadMyJobs();
+    else setJobs([]);
+  }, [publicKey]);
+
+  const loadMyJobs = async () => {
+    if (!publicKey) return;
+    setJobsLoading(true);
+    try {
+      const res = await fetch(`/api/invoices?clientWallet=${publicKey.toString()}`);
+      const data = await res.json();
+      setJobs(data.jobs || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setJobsLoading(false);
+    }
+  };
+
   const [isCreating, setIsCreating] = useState(false);
+  const [approvingId, setApprovingId] = useState<string | null>(null);
+
+  const handleApproveMilestone = async (job: any) => {
+    if (!publicKey || !signTransaction) return setError("Connect wallet first");
+    setApprovingId(job.id);
+    setError(null);
+    try {
+      const wallet = { publicKey: publicKey!, signTransaction: signTransaction! };
+      const tx = await buildApproveMilestoneTx(
+        connection,
+        wallet,
+        job.dodoInvoiceId,
+        publicKey!
+      );
+
+      const txId = await sendTransaction(tx, connection);
+      console.log("Milestone approved on-chain:", txId);
+
+
+      const res = await fetch("/api/approve-milestone", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          dodoInvoiceId: job.dodoInvoiceId,
+          txSignature: txId,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to trigger release");
+
+      setTxSuccess("Milestone approved! Funds safely released to freelancer.");
+      await loadMyJobs();
+    } catch (e: any) {
+      setError(e.message?.includes("User rejected")
+        ? "Approval cancelled."
+        : e.message || "Failed to approve milestone");
+    } finally {
+      setApprovingId(null);
+    }
+  };
+
+  const handleForceFund = async (job: any) => {
+    try {
+      const res = await fetch("/api/debug/force-fund", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ invoiceId: job.id })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Force fund failed");
+
+      setTxSuccess("Vault forcefully funded (Dev Mode bypass).");
+      await loadMyJobs();
+    } catch (e: any) {
+      setError(e.message);
+    }
+  };
+
   const [formData, setFormData] = useState({
     jobTitle: "",
     amount: "",
@@ -273,6 +357,80 @@ export default function ClientDashboard() {
               </div>
             </div>
 
+          </div>
+
+          {/* Job History Feed */}
+          <div className="mt-8 border-t border-white/10 pt-12">
+            <h2 className="text-2xl font-light text-white tracking-tight flex items-center gap-3 mb-6">
+              <span className="w-2 h-2 rounded-full bg-blue-500" />
+              Active Contracts
+            </h2>
+
+            {jobsLoading ? (
+              <div className="p-12 border border-white/5 bg-white/[0.01] flex justify-center text-white/50">
+                <Loader2 className="h-6 w-6 animate-spin" />
+              </div>
+            ) : jobs.length === 0 ? (
+              <div className="p-12 border border-white/5 bg-white/[0.01] text-center text-white/50 font-light text-sm text-balance">
+                You have not created any jobs yet. Your active contracts will appear here.
+              </div>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2">
+                {jobs.map((job) => {
+                  const onChainStatus = job.onChain
+                    ? Object.keys(job.onChain.status)[0]
+                    : job.status;
+
+                  return (
+                    <div key={job.id} className="p-6 bg-white/[0.02] border border-white/5 relative overflow-hidden group hover:border-white/20 transition-all">
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <p className="text-[10px] text-white/40 uppercase tracking-widest mb-1">
+                            {new Date(job.createdAt).toLocaleDateString()}
+                          </p>
+                          <h3 className="text-lg font-light text-white">{job.jobTitle}</h3>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xl font-light text-white">${job.amount / 100}</p>
+                          <p className="text-[10px] text-white/40 uppercase tracking-widest">USDC</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between mt-6 pt-4 border-t border-white/5">
+                        <span className="text-xs uppercase tracking-widest font-mono p-1 border border-white/10 bg-white/5 text-white/80">
+                          {onChainStatus}
+                        </span>
+                        <div className="flex gap-2">
+                          {job.status === "PENDING" && (
+                            <div className="flex items-center gap-3">
+                              <span className="text-xs text-red-500/70 py-1 px-2">
+                                Awaiting Payment
+                              </span>
+                              <button
+                                onClick={() => handleForceFund(job)}
+                                className="text-[10px] px-3 py-1.5 bg-blue-500/20 text-blue-400 border border-blue-500/30 hover:bg-blue-500/30 transition-colors uppercase tracking-widest"
+                              >
+                                Force Fund (Dev)
+                              </button>
+                            </div>
+                          )}
+                          {job.status === "FUNDED" && (
+                            <button
+                              onClick={() => handleApproveMilestone(job)}
+                              disabled={approvingId === job.id}
+                              className="text-xs px-4 py-1.5 bg-white text-black hover:bg-white/80 transition-colors disabled:opacity-50 flex items-center gap-2"
+                            >
+                              {approvingId === job.id ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+                              Review Milestone
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </motion.div>
       </div>

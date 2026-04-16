@@ -71,9 +71,10 @@ export async function POST(req: Request) {
   }
 
   const dodoInvoiceId =
+    event.data?.metadata?.dodoInvoiceId ??
+    event.data?.payload?.metadata?.dodoInvoiceId ??
     event.data?.checkout_session_id ??
     event.data?.session_id ??
-    event.data?.payload?.checkout_session_id ??
     null;
 
   if (!dodoInvoiceId) {

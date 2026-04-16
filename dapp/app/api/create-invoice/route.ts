@@ -22,9 +22,11 @@ export async function POST(req: Request) {
     }
 
     const baseUrl = process.env.NEXT_PUBLIC_URL || "http://localhost:3000";
-    const returnUrl = `${baseUrl}/client?success=true`;
 
-    let dodoInvoiceId: string;
+
+    const dodoInvoiceId = "inv_" + Date.now().toString().slice(-10);
+    const returnUrl = `${baseUrl}/client?success=true&invoiceId=${dodoInvoiceId}`;
+
     let dodoPaymentUrl: string;
 
     const dodoApiKey = process.env.DODO_PAYMENTS_API_KEY;
@@ -32,7 +34,6 @@ export async function POST(req: Request) {
     const isMock = !dodoApiKey || dodoApiKey === "mock";
 
     if (!isMock && dodoProductId) {
-
       const DodoPayments = (await import("dodopayments")).default;
       const dodo = new DodoPayments({
         bearerToken: dodoApiKey,
@@ -40,22 +41,23 @@ export async function POST(req: Request) {
       });
 
       const session = await dodo.checkoutSessions.create({
-        product_cart: [{ product_id: dodoProductId, quantity: 1 }],
+        product_cart: [{
+          product_id: dodoProductId,
+          quantity: 1,
+          amount: Number(amount)
+        }],
         return_url: returnUrl,
         metadata: {
+          dodoInvoiceId,
           clientWallet,
           freelancerWallet,
           amountCents: String(amount),
         },
       });
 
-      dodoInvoiceId = session.session_id;
       dodoPaymentUrl = session.checkout_url ?? returnUrl;
-
     } else {
-
-      dodoInvoiceId = "inv_" + Date.now().toString().slice(-10);
-      dodoPaymentUrl = `${returnUrl}&invoiceId=${dodoInvoiceId}&mock=true`;
+      dodoPaymentUrl = `${returnUrl}&mock=true`;
     }
 
     const clientPubkey = new PublicKey(clientWallet);
