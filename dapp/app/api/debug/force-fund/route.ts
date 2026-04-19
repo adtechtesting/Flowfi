@@ -21,10 +21,10 @@ export async function POST(req: Request) {
 
     console.log(`[DEV MODE] Force funding vault for ${invoice.dodoInvoiceId}...`);
     const txSig = await fundEscrow(new PublicKey(invoice.clientWallet), invoice.dodoInvoiceId);
-    
+
     await prisma.invoice.update({
       where: { id: invoice.id },
-      data: { status: "FUNDED", webhookProcessed: true, txSignature: txSig },
+      data: { status: "ESCROW_FUNDED", webhookProcessed: true, txSignature: txSig },
     });
 
     return NextResponse.json({ success: true, txSig });

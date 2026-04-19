@@ -414,7 +414,7 @@ export default function ClientDashboard() {
                               </button>
                             </div>
                           )}
-                          {job.status === "FUNDED" && (
+                          {(job.status === "ESCROW_FUNDED" || job.status === "ADVANCED") && (
                             <button
                               onClick={() => handleApproveMilestone(job)}
                               disabled={approvingId === job.id}

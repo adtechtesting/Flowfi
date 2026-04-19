@@ -5,6 +5,7 @@ import {
   getAssociatedTokenAddress,
   TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
+
 } from "@solana/spl-token";
 import { FlowfiEscrow } from "../anchor/flowfi_escrow";
 import {
@@ -102,7 +103,7 @@ export const buildRequestAdvanceTx = async (
     false
   );
 
-  return program.methods
+  const tx = await program.methods
     .requestAdvance()
     .accounts({
       freelancer: freelancerPubkey,
@@ -116,6 +117,21 @@ export const buildRequestAdvanceTx = async (
       systemProgram: SystemProgram.programId,
     } as any)
     .transaction();
+
+
+  const ataInfo = await connection.getAccountInfo(freelancerUsdc);
+  if (!ataInfo) {
+    const { createAssociatedTokenAccountInstruction } = await import("@solana/spl-token");
+    const initAtaIx = createAssociatedTokenAccountInstruction(
+      freelancerPubkey,
+      freelancerUsdc,
+      freelancerPubkey,
+      USDC_MINT
+    );
+    tx.instructions.unshift(initAtaIx);
+  }
+
+  return tx;
 };
 
 

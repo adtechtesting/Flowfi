@@ -19,13 +19,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
     }
 
-
-    await prisma.invoice.update({
-      where: { id: invoice.id },
-      data: { status: "APPROVED" },
-    });
-
-
     let releaseSig = "";
     try {
       releaseSig = await releaseFunds(
