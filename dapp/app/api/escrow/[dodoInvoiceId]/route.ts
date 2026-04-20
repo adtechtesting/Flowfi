@@ -39,8 +39,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ dodoInvo
         }
       }
     } catch (e: any) {
-      console.error("Failed to fetch on-chain escrow:", e);
-      onChainError = e.message || "Unknown on-chain error";
+      onChainError = "On-chain state unavailable";
     }
 
     return NextResponse.json({
@@ -51,6 +50,6 @@ export async function GET(req: Request, { params }: { params: Promise<{ dodoInvo
       escrowPubkey: escrowPda.toString()
     });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || "Failed to fetch escrow" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch escrow" }, { status: 500 });
   }
 }

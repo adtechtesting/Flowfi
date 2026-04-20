@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useState, Suspense } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
-import { Plus, Briefcase, Loader2, Info } from "lucide-react";
+import { Plus, Briefcase, Loader2, Info, CheckCircle, ExternalLink, Zap, Clock, ShieldCheck } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { PublicKey } from "@solana/web3.js";
 import {
@@ -11,7 +11,7 @@ import {
   buildApproveMilestoneTx,
 } from "../lib/solana/client";
 
-export default function ClientDashboard() {
+function ClientDashboardContent() {
   const { publicKey, signTransaction, connected, sendTransaction } = useWallet();
   const { connection } = useConnection();
   const searchParams = useSearchParams();
@@ -36,7 +36,7 @@ export default function ClientDashboard() {
       const data = await res.json();
       setJobs(data.jobs || []);
     } catch (e) {
-      console.error(e);
+      // Intentionally silent
     } finally {
       setJobsLoading(false);
     }
@@ -59,8 +59,6 @@ export default function ClientDashboard() {
       );
 
       const txId = await sendTransaction(tx, connection);
-      console.log("Milestone approved on-chain:", txId);
-
 
       const res = await fetch("/api/approve-milestone", {
         method: "POST",
@@ -74,12 +72,12 @@ export default function ClientDashboard() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to trigger release");
 
-      setTxSuccess("Milestone approved! Funds safely released to freelancer.");
+      setTxSuccess("Work approved! The final payment has been successfully released to the freelancer.");
       await loadMyJobs();
     } catch (e: any) {
       setError(e.message?.includes("User rejected")
         ? "Approval cancelled."
-        : e.message || "Failed to approve milestone");
+        : e.message || "Failed to approve work");
     } finally {
       setApprovingId(null);
     }
@@ -95,7 +93,7 @@ export default function ClientDashboard() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Force fund failed");
 
-      setTxSuccess("Vault forcefully funded (Dev Mode bypass).");
+      setTxSuccess("Funds forcefully secured (Dev Mode bypass).");
       await loadMyJobs();
     } catch (e: any) {
       setError(e.message);
@@ -110,8 +108,7 @@ export default function ClientDashboard() {
 
   const handleCreateJob = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!publicKey || !signTransaction) return alert("Please connect wallet first");
-
+    if (!publicKey || !signTransaction) return alert("Please connect your wallet first");
 
     let freelancerPubkey: PublicKey;
     try {
@@ -127,7 +124,6 @@ export default function ClientDashboard() {
 
     setIsCreating(true);
     try {
-
       const res = await fetch("/api/create-invoice", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -140,8 +136,7 @@ export default function ClientDashboard() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to create invoice");
-
+      if (!res.ok) throw new Error(data.error || "Failed to secure project");
 
       const walletAdapter = { publicKey: publicKey!, signTransaction: signTransaction! };
       const tx = await buildInitializeEscrowTx(
@@ -154,21 +149,16 @@ export default function ClientDashboard() {
         new PublicKey(data.authorityPubkey)
       );
 
-
       const txId = await sendTransaction(tx, connection);
-      console.log("Escrow initialized:", txId);
-
 
       window.location.href = data.paymentUrl;
 
     } catch (err: any) {
-      console.error(err);
       alert("Error: " + (err.message || "Unknown error"));
     } finally {
       setIsCreating(false);
     }
   };
-
 
   if (!connected) {
     return (
@@ -184,16 +174,15 @@ export default function ClientDashboard() {
             <Briefcase className="h-8 w-8 text-white/50" strokeWidth={1.5} />
           </div>
           <h2 className="text-3xl font-light text-white tracking-tight mb-3">
-            Client Portal
+            Client Dashboard
           </h2>
           <p className="text-white/50 font-light text-sm leading-relaxed">
-            Connect your Solana wallet to create escrows and deploy instant payment rails.
+            Connect your wallet to hire talent and guarantee secure, instant payments.
           </p>
         </motion.div>
       </div>
     );
   }
-
 
   return (
     <div className="relative min-h-screen bg-black w-full pt-32 pb-24 px-6 overflow-hidden font-sans">
@@ -210,22 +199,22 @@ export default function ClientDashboard() {
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/10 pb-8">
             <div>
               <h1 className="text-4xl font-light text-white tracking-tight">
-                Client Portal
+                Client Dashboard
               </h1>
               <p className="text-white/50 mt-2 font-light">
-                Manage your escrows and freelance contracts.
+                Manage your active projects and secure payments.
               </p>
             </div>
             <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10">
               <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
               <span className="text-xs font-mono text-white/70 uppercase tracking-wider">
-                Devnet
+                Network Live
               </span>
             </div>
           </div>
 
           {/* Payment success banner */}
-          {isSuccess && (
+          {(isSuccess || txSuccess) && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
@@ -233,7 +222,20 @@ export default function ClientDashboard() {
             >
               <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
               <p className="text-green-400/90 text-sm font-light">
-                Payment processed. Your escrow is being funded on-chain.
+                {txSuccess || "Payment successful. The funds are now securely locked for this job."}
+              </p>
+            </motion.div>
+          )}
+
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              className="p-4 bg-red-500/5 border border-red-500/20 flex items-center gap-3"
+            >
+              <div className="w-1.5 h-1.5 bg-red-500 rounded-full" />
+              <p className="text-red-400/90 text-sm font-light">
+                {error}
               </p>
             </motion.div>
           )}
@@ -247,20 +249,20 @@ export default function ClientDashboard() {
                   <Plus className="h-5 w-5" strokeWidth={1.5} />
                 </div>
                 <h2 className="text-2xl font-light text-white tracking-tight">
-                  Hire a Freelancer
+                  Start a New Project
                 </h2>
               </div>
 
               <form onSubmit={handleCreateJob} className="flex flex-col gap-6">
                 <div>
                   <label className="mb-2 block text-xs font-medium tracking-[0.1em] text-white/50 uppercase">
-                    Job Title
+                    Project Name
                   </label>
                   <input
                     type="text"
                     required
                     className="w-full bg-white/[0.02] border border-white/10 px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-white/30 transition-all font-light"
-                    placeholder="e.g. Smart Contract Audit"
+                    placeholder="e.g. Website Redesign"
                     value={formData.jobTitle}
                     onChange={e => setFormData({ ...formData, jobTitle: e.target.value })}
                   />
@@ -268,7 +270,7 @@ export default function ClientDashboard() {
 
                 <div>
                   <label className="mb-2 block text-xs font-medium tracking-[0.1em] text-white/50 uppercase">
-                    Payout Amount (USD)
+                    Total Payment (USD)
                   </label>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 font-light">
@@ -289,7 +291,7 @@ export default function ClientDashboard() {
 
                 <div>
                   <label className="mb-2 block text-xs font-medium tracking-[0.1em] text-white/50 uppercase">
-                    Freelancer Wallet (Solana)
+                    Freelancer Wallet Address
                   </label>
                   <input
                     type="text"
@@ -309,9 +311,9 @@ export default function ClientDashboard() {
                   className="mt-4 flex items-center justify-center gap-2 px-8 py-4 bg-white hover:bg-white/90 text-black font-medium transition-all w-full disabled:opacity-70 disabled:cursor-not-allowed"
                 >
                   {isCreating ? (
-                    <><Loader2 className="h-5 w-5 animate-spin" /> Creating...</>
+                    <><Loader2 className="h-5 w-5 animate-spin" /> Securing Funds...</>
                   ) : (
-                    "Create Escrow & Pay"
+                    "Secure Funds & Hire"
                   )}
                 </button>
               </form>
@@ -330,19 +332,19 @@ export default function ClientDashboard() {
                   <li className="flex items-start gap-4">
                     <div className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-white/40" />
                     <p className="leading-relaxed">
-                      Enter job details and the freelancer's Solana public address.
+                      Enter the project details and the freelancer's wallet address.
                     </p>
                   </li>
                   <li className="flex items-start gap-4">
                     <div className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-white/40" />
                     <p className="leading-relaxed">
-                      Your wallet signs the escrow setup transaction on devnet.
+                      Securely lock the payment upfront using your preferred method.
                     </p>
                   </li>
                   <li className="flex items-start gap-4">
                     <div className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-white/40" />
                     <p className="leading-relaxed">
-                      Pay via Dodo. Our backend funds the on-chain vault after confirmation.
+                      Funds are held safely. The final payment is only released once you are completely satisfied with the work.
                     </p>
                   </li>
                 </ul>
@@ -350,9 +352,8 @@ export default function ClientDashboard() {
 
               <div className="mt-10 p-5 border border-white/5 bg-white/[0.02]">
                 <p className="text-xs text-white/50 leading-relaxed font-light">
-                  <span className="text-white/80 font-medium">Advance Notice:</span>{" "}
-                  Once funded, the freelancer can draw an 85% salary advance immediately.
-                  The remaining 15% releases on your final approval.
+                  <span className="text-white/80 font-medium">Win-Win:</span>{" "}
+                  Once funds are secured, your freelancer can instantly access up to 85% of their pay to get started. You stay protected, and they get paid without waiting.
                 </p>
               </div>
             </div>
@@ -363,7 +364,7 @@ export default function ClientDashboard() {
           <div className="mt-8 border-t border-white/10 pt-12">
             <h2 className="text-2xl font-light text-white tracking-tight flex items-center gap-3 mb-6">
               <span className="w-2 h-2 rounded-full bg-blue-500" />
-              Active Contracts
+              Active Projects
             </h2>
 
             {jobsLoading ? (
@@ -372,7 +373,7 @@ export default function ClientDashboard() {
               </div>
             ) : jobs.length === 0 ? (
               <div className="p-12 border border-white/5 bg-white/[0.01] text-center text-white/50 font-light text-sm text-balance">
-                You have not created any jobs yet. Your active contracts will appear here.
+                No active projects yet. When you secure a new contract, it will appear here.
               </div>
             ) : (
               <div className="grid gap-4 md:grid-cols-2">
@@ -392,19 +393,19 @@ export default function ClientDashboard() {
                         </div>
                         <div className="text-right">
                           <p className="text-xl font-light text-white">${job.amount / 100}</p>
-                          <p className="text-[10px] text-white/40 uppercase tracking-widest">USDC</p>
+                          <p className="text-[10px] text-white/40 uppercase tracking-widest">Secured</p>
                         </div>
                       </div>
 
                       <div className="flex items-center justify-between mt-6 pt-4 border-t border-white/5">
-                        <span className="text-xs uppercase tracking-widest font-mono p-1 border border-white/10 bg-white/5 text-white/80">
-                          {onChainStatus}
+                        <span className="text-[10px] uppercase tracking-widest font-mono p-1.5 border border-white/10 bg-white/5 text-white/80">
+                          {onChainStatus.replace(/_/g, ' ')}
                         </span>
                         <div className="flex gap-2">
                           {job.status === "PENDING" && (
                             <div className="flex items-center gap-3">
                               <span className="text-xs text-red-500/70 py-1 px-2">
-                                Awaiting Payment
+                                Waiting for Funds
                               </span>
                               <button
                                 onClick={() => handleForceFund(job)}
@@ -418,10 +419,10 @@ export default function ClientDashboard() {
                             <button
                               onClick={() => handleApproveMilestone(job)}
                               disabled={approvingId === job.id}
-                              className="text-xs px-4 py-1.5 bg-white text-black hover:bg-white/80 transition-colors disabled:opacity-50 flex items-center gap-2"
+                              className="text-xs px-4 py-1.5 bg-white text-black hover:bg-white/80 transition-colors disabled:opacity-50 flex items-center gap-2 font-medium"
                             >
                               {approvingId === job.id ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
-                              Review Milestone
+                              Approve & Release Funds
                             </button>
                           )}
                         </div>
@@ -435,5 +436,17 @@ export default function ClientDashboard() {
         </motion.div>
       </div>
     </div>
+  );
+}
+
+export default function ClientDashboard() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-white/20" />
+      </div>
+    }>
+      <ClientDashboardContent />
+    </Suspense>
   );
 }

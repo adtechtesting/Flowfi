@@ -50,7 +50,6 @@ export async function GET(req: Request) {
     return NextResponse.json({ jobs: enriched });
 
   } catch (error: any) {
-    console.error("GET invoices error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch jobs" }, { status: 500 });
   }
 }

@@ -7,7 +7,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Search, Loader2, Coins, CheckCircle, ExternalLink, ShieldCheck, Zap, Clock, Info } from "lucide-react";
 import { buildRequestAdvanceTx } from "../lib/solana/client";
 
-
 const explorerUrl = (sig: string) => `https://explorer.solana.com/tx/${sig}?cluster=devnet`;
 
 const formatUsdc = (lamports: any): string => {
@@ -39,7 +38,7 @@ export default function FreelancerDashboard() {
     try {
       const res = await fetch(`/api/invoices?freelancerWallet=${publicKey.toString()}`);
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to load jobs");
+      if (!res.ok) throw new Error(data.error || "Failed to load projects");
       setJobs(data.jobs || []);
     } catch (e: any) {
       setError(e.message);
@@ -62,7 +61,6 @@ export default function FreelancerDashboard() {
       );
 
       const txId = await sendTransaction(tx, connection);
-      console.log("Advance claimed:", explorerUrl(txId));
 
       await fetch("/api/advance/request", {
         method: "POST",
@@ -77,8 +75,8 @@ export default function FreelancerDashboard() {
       await loadMyJobs();
     } catch (e: any) {
       setError(e.message?.includes("User rejected")
-        ? "Transaction cancelled."
-        : e.message || "Failed to claim advance");
+        ? "Withdrawal cancelled."
+        : e.message || "Failed to withdraw funds");
     } finally {
       setAdvanceLoadingId(null);
     }
@@ -93,9 +91,9 @@ export default function FreelancerDashboard() {
           <div className="mb-6 p-4 bg-white/[0.03] border border-white/5 inline-flex">
             <Coins className="h-8 w-8 text-white/50" strokeWidth={1.5} />
           </div>
-          <h2 className="text-3xl font-light text-white tracking-tight mb-3">Freelancer Hub</h2>
+          <h2 className="text-3xl font-light text-white tracking-tight mb-3">Freelancer Dashboard</h2>
           <p className="text-white/50 font-light text-sm leading-relaxed">
-            Connect your Solana wallet to view assigned jobs and claim instant advances.
+            Connect your wallet to access your projects and unlock your earnings instantly.
           </p>
         </motion.div>
       </div>
@@ -113,9 +111,8 @@ export default function FreelancerDashboard() {
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/10 pb-8">
             <div>
-              <h1 className="text-4xl font-light text-white tracking-tight">Assigned Jobs</h1>
-              <p className="text-white/50 mt-2 font-light">Claim your instant advances safely on-chain.</p>
-
+              <h1 className="text-4xl font-light text-white tracking-tight">Active Projects</h1>
+              <p className="text-white/50 mt-2 font-light">Unlock your earnings immediately — no waiting for net-30 terms.</p>
             </div>
             {loading && <Loader2 className="h-5 w-5 animate-spin text-white/50 mb-2" />}
           </div>
@@ -133,11 +130,11 @@ export default function FreelancerDashboard() {
                 className="p-4 bg-green-500/5 border border-green-500/20 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <CheckCircle className="h-4 w-4 text-green-400 shrink-0" />
-                  <p className="text-green-400/90 text-sm font-light">Advance claimed successfully.</p>
+                  <p className="text-green-400/90 text-sm font-light">Success! Your funds have been instantly transferred to your wallet.</p>
                 </div>
                 <a href={explorerUrl(txSuccess)} target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-1 text-xs text-green-400/60 hover:text-green-400 transition-colors font-mono">
-                  Explorer <ExternalLink className="h-3 w-3" />
+                  Receipt <ExternalLink className="h-3 w-3" />
                 </a>
               </motion.div>
             )}
@@ -148,8 +145,8 @@ export default function FreelancerDashboard() {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
               className="mt-4 p-20 flex flex-col items-center justify-center border border-dashed border-white/5 bg-white/[0.01]">
               <ShieldCheck className="mb-4 h-10 w-10 text-white/20" strokeWidth={1} />
-              <p className="text-white/40 font-light text-sm text-center max-w-xs leading-relaxed">
-                You do not have any active jobs assigned to your wallet yet.
+              <p className="text-white/40 font-light text-sm text-center max-w-sm leading-relaxed">
+                No active projects yet. When a client secures your payment, it will appear here ready for withdrawal.
               </p>
             </motion.div>
           ) : (
@@ -170,24 +167,30 @@ export default function FreelancerDashboard() {
                 const remainingUsdc = (parseFloat(totalUsdc) - parseFloat(advanceUsdc)).toFixed(2);
 
                 return (
-                  <div key={job.id} className="p-8 bg-[#0a0a0a]/80 backdrop-blur-md border border-white/5 hover:border-white/20 transition-all flex flex-col md:flex-row gap-8 justify-between items-center group">
+                  <div key={job.id} className="relative p-8 bg-[#0a0a0a]/80 backdrop-blur-md border border-white/5 hover:border-white/20 transition-all flex flex-col md:flex-row gap-8 justify-between items-center group">
+                    {/* Micro Corner Accents */}
+                    <div className="absolute -top-[1px] -left-[1px] h-[3px] w-[3px] bg-white/30 group-hover:bg-white transition-colors"></div>
+                    <div className="absolute -top-[1px] -right-[1px] h-[3px] w-[3px] bg-white/30 group-hover:bg-white transition-colors"></div>
+                    <div className="absolute -bottom-[1px] -left-[1px] h-[3px] w-[3px] bg-white/30 group-hover:bg-white transition-colors"></div>
+                    <div className="absolute -bottom-[1px] -right-[1px] h-[3px] w-[3px] bg-white/30 group-hover:bg-white transition-colors"></div>
+
                     <div className="flex-1 w-full">
                       <div className="flex items-center gap-4 mb-2">
                         <h2 className="text-xl font-light text-white tracking-tight">{job.jobTitle}</h2>
-                        {isAdvanced && <span className="text-[10px] px-2 py-0.5 bg-amber-500/10 text-amber-500/80 uppercase tracking-widest border border-amber-500/20">Advanced</span>}
+                        {isAdvanced && <span className="text-[10px] px-2 py-0.5 bg-white/5 text-white/50 uppercase tracking-widest border border-white/10">Advance Withdrawn</span>}
                       </div>
 
                       <div className="flex gap-8 mt-4 border-t border-white/5 pt-4">
                         <div>
-                          <p className="text-[10px] text-white/40 uppercase tracking-widest mb-1">Total</p>
+                          <p className="text-[10px] text-white/40 uppercase tracking-widest mb-1">Total Pay</p>
                           <p className="text-white font-light">${totalUsdc} USDC</p>
                         </div>
                         <div>
-                          <p className="text-[10px] text-white/40 uppercase tracking-widest mb-1">Advance (85%)</p>
+                          <p className="text-[10px] text-white/40 uppercase tracking-widest mb-1">Available Now</p>
                           <p className="text-amber-400 font-light">${advanceUsdc} USDC</p>
                         </div>
                         <div>
-                          <p className="text-[10px] text-white/40 uppercase tracking-widest mb-1">Remaining</p>
+                          <p className="text-[10px] text-white/40 uppercase tracking-widest mb-1">Final Release</p>
                           <p className="text-white/60 font-light">${remainingUsdc} USDC</p>
                         </div>
                       </div>
@@ -201,21 +204,21 @@ export default function FreelancerDashboard() {
                           className="w-full md:w-auto flex justify-center items-center gap-2 px-6 py-3 bg-white hover:bg-white/90 text-black font-medium transition-all disabled:opacity-50"
                         >
                           {advanceLoadingId === job.id
-                            ? <><Loader2 className="h-4 w-4 animate-spin" /> Claiming...</>
+                            ? <><Loader2 className="h-4 w-4 animate-spin" /> Processing...</>
                             : <><Zap className="h-4 w-4" /> Get Paid Now</>
                           }
                         </button>
                       ) : onChainStatusKey === "released" ? (
-                        <div className="text-sm px-6 py-3 bg-purple-500/10 text-purple-400/80 font-medium flex items-center gap-2 border border-purple-500/20">
-                          <CheckCircle className="h-4 w-4" /> Fully Settled
+                        <div className="text-sm px-6 py-3 bg-white/5 text-white/70 font-medium flex items-center gap-2 border border-white/10">
+                          <CheckCircle className="h-4 w-4" /> Payment Complete
                         </div>
                       ) : isAdvanced ? (
                         <div className="text-sm px-6 py-3 bg-white/5 text-white/40 font-medium flex items-center gap-2 border border-white/5">
-                          <CheckCircle className="h-4 w-4 text-amber-500/50" /> Advance Paid Out
+                          <CheckCircle className="h-4 w-4 text-amber-500/50" /> Advance Withdrawn
                         </div>
                       ) : (
-                        <div className="text-sm px-6 py-3 bg-white/5 text-white/30 font-medium flex items-center gap-2 border border-transparent border-dashed">
-                          <Clock className="h-4 w-4" /> Waiting on Client
+                        <div className="text-sm px-6 py-3 bg-white/5 text-white/30 font-light flex items-center gap-2 border border-transparent border-dashed">
+                          <Clock className="h-4 w-4" /> Awaiting Client Deposit
                         </div>
                       )}
                     </div>

@@ -26,12 +26,9 @@ export async function POST(req: Request) {
         new PublicKey(invoice.freelancerWallet),
         invoice.dodoInvoiceId
       );
-      console.log("Final funds released:", releaseSig);
     } catch (e: any) {
-      console.error("Release funds failed:", e);
       return NextResponse.json({
-        error: "Client approved milestone, but automatic release failed. Admin intervention required.",
-        details: e.message
+        error: "Milestone approved, but fund release failed. Contact support.",
       }, { status: 500 });
     }
 
@@ -43,7 +40,6 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, releaseTxSig: releaseSig });
   } catch (error: any) {
-    console.error("Approve milestone error:", error);
-    return NextResponse.json({ error: error.message || "Failed to process approval" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to process approval" }, { status: 500 });
   }
 }

@@ -5,6 +5,10 @@ import { PublicKey, Connection } from "@solana/web3.js";
 import { getEscrowPda, getVaultAta } from "@/app/lib/solana/constants";
 
 export async function GET() {
+  if (process.env.NODE_ENV === "production") {
+    return new NextResponse(null, { status: 404 });
+  }
+
   const results = [];
   try {
     const jobs = await prisma.invoice.findMany({
@@ -40,15 +44,15 @@ export async function GET() {
           const vaultBal = await connection.getTokenAccountBalance(vaultTokenAddress);
           jobResult.vaultBalance = vaultBal.value.uiAmount;
         } catch (e) {
-          jobResult.vaultBalance = "NOT INITIALIZED or ERRROR";
+          jobResult.vaultBalance = "NOT INITIALIZED or ERROR";
         }
       } catch (e: any) {
-        jobResult.error = e.message;
+        jobResult.error = "Data fetch failed for this job";
       }
       results.push(jobResult);
     }
     return NextResponse.json({ success: true, results });
   } catch (err: any) {
-    return NextResponse.json({ success: false, error: err.message });
+    return NextResponse.json({ success: false, error: "Diagnostics failed" });
   }
 }

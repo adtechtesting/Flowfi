@@ -87,9 +87,8 @@ export async function POST(req: Request) {
     });
 
   } catch (error: any) {
-    console.error("create-invoice error:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to create invoice" },
+      { error: "Failed to create invoice" },
       { status: 500 }
     );
   }

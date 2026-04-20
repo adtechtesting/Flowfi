@@ -25,11 +25,10 @@ export async function POST(req: Request) {
       const onChainEscrow = await fetchEscrow(clientWallet, dodoInvoiceId);
 
       if (!onChainEscrow || !onChainEscrow.advanced) {
-        console.warn(`Advance not reflected on chain yet for: ${dodoInvoiceId}`);
-
+        // Not reflected yet
       }
     } catch (e) {
-      console.error("Could not fetch on-chain state for advance check", e);
+      // Background check failed - intentionally silent
     }
 
 
@@ -43,9 +42,8 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, invoice: updatedInvoice });
   } catch (error: any) {
-    console.error("Advance Route Error:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to sync advance request" },
+      { error: "Failed to sync advance request" },
       { status: 500 }
     );
   }
