@@ -4,9 +4,10 @@ import { useState, useEffect } from "react";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Loader2, Coins, CheckCircle, ExternalLink, ShieldCheck, Zap, Clock, Info } from "lucide-react";
+import { Search, Loader2, Coins, CheckCircle, ExternalLink, ShieldCheck, Zap, Clock, Info, Banknote, X } from "lucide-react";
 import { buildRequestAdvanceTx } from "../lib/solana/client";
-
+import { USDC_MINT } from "../lib/solana/constants";
+import { TransakConfig, Transak } from '@transak/ui-js-sdk';
 const explorerUrl = (sig: string) => `https://explorer.solana.com/tx/${sig}?cluster=devnet`;
 
 const formatUsdc = (lamports: any): string => {
@@ -27,10 +28,30 @@ export default function FreelancerDashboard() {
   const [txSuccess, setTxSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+
+  const [usdcBalance, setUsdcBalance] = useState<number>(0);
+
   useEffect(() => {
-    if (publicKey) loadMyJobs();
-    else setJobs([]);
+    if (publicKey) {
+      loadMyJobs();
+      loadWalletBalance();
+    } else {
+      setJobs([]);
+      setUsdcBalance(0);
+    }
   }, [publicKey]);
+
+  const loadWalletBalance = async () => {
+    if (!publicKey) return;
+    try {
+      const { getAssociatedTokenAddress } = await import("@solana/spl-token");
+      const ata = await getAssociatedTokenAddress(USDC_MINT, publicKey);
+      const balance = await connection.getTokenAccountBalance(ata);
+      setUsdcBalance(balance.value.uiAmount || 0);
+    } catch {
+      setUsdcBalance(0);
+    }
+  };
 
   const loadMyJobs = async () => {
     if (!publicKey) return;
@@ -82,6 +103,47 @@ export default function FreelancerDashboard() {
     }
   };
 
+  const handleWithdrawToBank = async (usdcAmount: number) => {
+    if (!publicKey) return setError("Connect wallet first");
+    if (usdcAmount <= 0) return setError("No funds available to withdraw");
+
+    try {
+      const response = await fetch('/api/transak/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: usdcAmount,
+          walletAddress: publicKey.toString()
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to generate Transak session. Did you add TRANSAK_ACCESS_TOKEN to .env?');
+      }
+
+      const transakConfig: TransakConfig = {
+        widgetUrl: data.widgetUrl,
+        widgetHeight: "650px",
+        widgetWidth: "500px",
+      };
+
+      const transak = new Transak(transakConfig);
+
+      transak.init();
+
+      Transak.on(Transak.EVENTS.TRANSAK_ORDER_SUCCESSFUL, (data: any) => {
+        console.log("Withdrawal successful:", data);
+        transak.close();
+        setTimeout(() => loadWalletBalance(), 5000);
+      });
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Failed to initialize withdrawal");
+    }
+  };
+
   if (!connected) {
     return (
       <div className="relative min-h-screen bg-black w-full flex items-center justify-center overflow-hidden font-sans">
@@ -114,7 +176,26 @@ export default function FreelancerDashboard() {
               <h1 className="text-4xl font-light text-white tracking-tight">Active Projects</h1>
               <p className="text-white/50 mt-2 font-light">Unlock your earnings immediately — no waiting for net-30 terms.</p>
             </div>
-            {loading && <Loader2 className="h-5 w-5 animate-spin text-white/50 mb-2" />}
+
+            <div className="flex items-center gap-6 bg-white/[0.03] p-4 border border-white/5 relative group">
+              <div className="absolute -top-[1px] -left-[1px] h-[3px] w-[3px] bg-white/20 group-hover:bg-white transition-colors"></div>
+              <div className="absolute -bottom-[1px] -right-[1px] h-[3px] w-[3px] bg-white/20 group-hover:bg-white transition-colors"></div>
+
+              <div>
+                <p className="text-[10px] text-white/40 uppercase tracking-widest mb-1">Available to Withdraw</p>
+                <p className="text-2xl font-light text-white flex items-center gap-2">
+                  <Banknote className="h-5 w-5 text-green-400/80" />
+                  ${usdcBalance.toFixed(2)} <span className="text-sm text-white/40">USDC</span>
+                </p>
+              </div>
+              <button
+                onClick={() => handleWithdrawToBank(usdcBalance)}
+                disabled={usdcBalance <= 0}
+                className="px-5 py-2.5 bg-green-500/10 hover:bg-green-500/20 text-green-400 font-medium transition-all disabled:opacity-30 disabled:cursor-not-allowed border border-green-500/20"
+              >
+                Withdraw to Bank
+              </button>
+            </div>
           </div>
 
           {/* Alerts */}

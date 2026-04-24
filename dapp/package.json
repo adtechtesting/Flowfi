@@ -28,6 +28,8 @@
     "@solana/react-hooks": "^1.1.5",
     "@solana/spl-token": "^0.4.14",
     "@solana/wallet-adapter-react": "^0.15.39",
+    "@transak/transak-sdk": "^4.0.2",
+    "@transak/ui-js-sdk": "^1.0.0",
     "bn": "^1.0.5",
     "bn.js": "^5.2.3",
     "bs58": "^6.0.0",

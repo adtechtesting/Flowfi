@@ -36,7 +36,7 @@ function ClientDashboardContent() {
       const data = await res.json();
       setJobs(data.jobs || []);
     } catch (e) {
-      // Intentionally silent
+      console.error(e);
     } finally {
       setJobsLoading(false);
     }
