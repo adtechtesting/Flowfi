@@ -149,8 +149,8 @@ export default function FreelancerDashboard() {
       <div className="relative min-h-screen bg-black w-full flex items-center justify-center overflow-hidden font-sans">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white/5 rounded-full blur-[120px] opacity-50 pointer-events-none" />
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-          className="relative z-10 p-12 bg-[#0a0a0a]/80 backdrop-blur-md border border-white/5 flex flex-col items-center text-center max-w-md w-full mx-4">
-          <div className="mb-6 p-4 bg-white/[0.03] border border-white/5 inline-flex">
+          className="relative z-10 p-12 liquid-glass-strong glow-ring noise rounded-3xl flex flex-col items-center text-center max-w-md w-full mx-4">
+          <div className="mb-6 p-4 liquid-glass-strong rounded-2xl inline-flex">
             <Coins className="h-8 w-8 text-white/50" strokeWidth={1.5} />
           </div>
           <h2 className="text-3xl font-light text-white tracking-tight mb-3">Freelancer Dashboard</h2>
@@ -177,7 +177,7 @@ export default function FreelancerDashboard() {
               <p className="text-white/50 mt-2 font-light">Unlock your earnings immediately — no waiting for net-30 terms.</p>
             </div>
 
-            <div className="flex items-center gap-6 bg-white/[0.03] p-4 border border-white/5 relative group">
+            <div className="flex items-center gap-6 liquid-glass-strong glow-ring noise p-6 rounded-3xl relative group">
               <div className="absolute -top-[1px] -left-[1px] h-[3px] w-[3px] bg-white/20 group-hover:bg-white transition-colors"></div>
               <div className="absolute -bottom-[1px] -right-[1px] h-[3px] w-[3px] bg-white/20 group-hover:bg-white transition-colors"></div>
 
@@ -224,7 +224,7 @@ export default function FreelancerDashboard() {
           {/* Jobs List */}
           {jobs.length === 0 && !loading ? (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              className="mt-4 p-20 flex flex-col items-center justify-center border border-dashed border-white/5 bg-white/[0.01]">
+              className="mt-4 p-20 flex flex-col items-center justify-center liquid-glass-strong noise rounded-3xl text-center">
               <ShieldCheck className="mb-4 h-10 w-10 text-white/20" strokeWidth={1} />
               <p className="text-white/40 font-light text-sm text-center max-w-sm leading-relaxed">
                 No active projects yet. When a client secures your payment, it will appear here ready for withdrawal.
@@ -248,7 +248,7 @@ export default function FreelancerDashboard() {
                 const remainingUsdc = (parseFloat(totalUsdc) - parseFloat(advanceUsdc)).toFixed(2);
 
                 return (
-                  <div key={job.id} className="relative p-8 bg-[#0a0a0a]/80 backdrop-blur-md border border-white/5 hover:border-white/20 transition-all flex flex-col md:flex-row gap-8 justify-between items-center group">
+                  <div key={job.id} className="relative p-8 md:p-10 liquid-glass-strong glow-ring noise rounded-3xl transition-all flex flex-col md:flex-row gap-8 justify-between items-center group">
                     {/* Micro Corner Accents */}
                     <div className="absolute -top-[1px] -left-[1px] h-[3px] w-[3px] bg-white/30 group-hover:bg-white transition-colors"></div>
                     <div className="absolute -top-[1px] -right-[1px] h-[3px] w-[3px] bg-white/30 group-hover:bg-white transition-colors"></div>

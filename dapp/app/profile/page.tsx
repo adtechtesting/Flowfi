@@ -97,12 +97,7 @@ function JobCard({ job, role }: { job: any; role: "client" | "freelancer" }) {
     ].filter(Boolean) as any[];
 
     return (
-        <div className="relative bg-[#0a0a0a]/80 backdrop-blur-md border border-white/5 hover:border-white/20 transition-all duration-500 group">
-            {/* Micro Corner Accents */}
-            <div className="absolute -top-[1px] -left-[1px] h-[3px] w-[3px] bg-white/30 group-hover:bg-white transition-colors"></div>
-            <div className="absolute -top-[1px] -right-[1px] h-[3px] w-[3px] bg-white/30 group-hover:bg-white transition-colors"></div>
-            <div className="absolute -bottom-[1px] -left-[1px] h-[3px] w-[3px] bg-white/30 group-hover:bg-white transition-colors"></div>
-            <div className="absolute -bottom-[1px] -right-[1px] h-[3px] w-[3px] bg-white/30 group-hover:bg-white transition-colors"></div>
+        <div className="relative liquid-glass-strong glow-ring noise rounded-3xl transition-all duration-500 group overflow-hidden">
 
             {/* Summary row */}
             <div
@@ -126,7 +121,7 @@ function JobCard({ job, role }: { job: any; role: "client" | "freelancer" }) {
                         </span>
                     </div>
                 </div>
-                <div className="w-8 h-8 flex items-center justify-center border border-white/10 bg-white/5 shrink-0 transition-transform duration-300" style={{ transform: expanded ? "rotate(180deg)" : "rotate(0deg)", borderRadius: '2px' }}>
+                <div className="w-8 h-8 flex items-center justify-center liquid-glass rounded-xl shrink-0 transition-transform duration-300" style={{ transform: expanded ? "rotate(180deg)" : "rotate(0deg)" }}>
                     <span className="text-white/50 text-xs">▼</span>
                 </div>
             </div>
@@ -166,7 +161,7 @@ function JobCard({ job, role }: { job: any; role: "client" | "freelancer" }) {
                                                 { label: "Instant Advance (85%)", value: `$${advanceUsd} USDC`, highlight: true },
                                                 { label: "Final Release (15%)", value: `$${(parseFloat(amountUsd) - parseFloat(advanceUsd)).toFixed(2)} USDC` },
                                             ].map(({ label, value, highlight }) => (
-                                                <div key={label} className={`flex justify-between text-sm px-4 py-3 font-light tracking-wide ${highlight ? "bg-amber-500/[0.03] border border-amber-500/10 text-amber-400/90" : "bg-white/[0.02] border border-white/5 text-white/60"}`} style={{ borderRadius: '2px' }}>
+                                                <div key={label} className={`flex justify-between text-sm px-4 py-3 font-light tracking-wide ${highlight ? "bg-amber-500/[0.03] border border-amber-500/10 text-amber-400/90 rounded-2xl" : "liquid-glass rounded-xl text-white/60"}`}>
                                                     <span>{label}</span>
                                                     <span className="font-mono">{value}</span>
                                                 </div>
@@ -178,7 +173,7 @@ function JobCard({ job, role }: { job: any; role: "client" | "freelancer" }) {
                                         <p className="text-[10px] text-white/40 uppercase tracking-widest mb-2 font-medium">
                                             {role === "client" ? "Hired Talent Address" : "Client Address"}
                                         </p>
-                                        <p className="text-sm font-mono text-white/50 bg-white/[0.02] border border-white/5 px-4 py-3 break-all" style={{ borderRadius: '2px' }}>
+                                        <p className="text-sm font-mono text-white/50 liquid-glass rounded-xl px-4 py-3 break-all">
                                             {role === "client" ? job.freelancerWallet : job.clientWallet}
                                         </p>
                                     </div>
@@ -237,13 +232,10 @@ export default function ProfilePage() {
             <div className="relative min-h-screen bg-black w-full flex items-center justify-center overflow-hidden font-sans selection:bg-white/20 selection:text-white">
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white/5 rounded-full blur-[120px] opacity-50 pointer-events-none" />
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-                    className="relative z-10 p-12 bg-[#0a0a0a]/80 backdrop-blur-md border border-white/5 flex flex-col items-center text-center max-w-md w-full mx-4 group">
-                    <div className="absolute -top-[1px] -left-[1px] h-[3px] w-[3px] bg-white/30 group-hover:bg-white transition-colors"></div>
-                    <div className="absolute -top-[1px] -right-[1px] h-[3px] w-[3px] bg-white/30 group-hover:bg-white transition-colors"></div>
-                    <div className="absolute -bottom-[1px] -left-[1px] h-[3px] w-[3px] bg-white/30 group-hover:bg-white transition-colors"></div>
-                    <div className="absolute -bottom-[1px] -right-[1px] h-[3px] w-[3px] bg-white/30 group-hover:bg-white transition-colors"></div>
+                    className="relative z-10 p-12 liquid-glass-strong glow-ring noise rounded-3xl flex flex-col items-center text-center max-w-md w-full mx-4 group">
 
-                    <div className="mb-6 p-4 bg-white/[0.03] border border-white/5 inline-flex" style={{ borderRadius: '2px' }}>
+
+                    <div className="mb-6 p-4 liquid-glass-strong rounded-2xl inline-flex">
                         <User className="h-8 w-8 text-white/50" strokeWidth={1.5} />
                     </div>
                     <h2 className="text-3xl font-light text-white tracking-tight mb-3">Your Profile</h2>
@@ -277,9 +269,7 @@ export default function ProfilePage() {
                     className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-white/10 pb-10">
                     <div className="flex items-center gap-6">
                         {/* Avatar */}
-                        <div className="w-20 h-20 bg-[#0a0a0a] border border-white/10 flex items-center justify-center shrink-0 relative group" style={{ borderRadius: '2px' }}>
-                            <div className="absolute -top-[1px] -left-[1px] h-[3px] w-[3px] bg-white/20 group-hover:bg-white transition-colors"></div>
-                            <div className="absolute -bottom-[1px] -right-[1px] h-[3px] w-[3px] bg-white/20 group-hover:bg-white transition-colors"></div>
+                        <div className="w-20 h-20 liquid-glass-strong glow-ring noise rounded-full flex items-center justify-center shrink-0 relative group">
                             <span className="text-2xl font-light text-white/80">
                                 {publicKey.toString().slice(0, 2).toUpperCase()}
                             </span>
@@ -311,7 +301,7 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 self-start md:self-auto" style={{ borderRadius: '2px' }}>
+                    <div className="flex items-center gap-2 px-3 py-1.5 liquid-glass rounded-xl self-start md:self-auto">
                         <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
                         <span className="text-xs font-mono text-white/70 uppercase tracking-widest">Network Live</span>
                     </div>
@@ -326,9 +316,7 @@ export default function ProfilePage() {
                         { label: "Active Projects", value: String(activeJobs), icon: Clock, color: "text-white/80" },
                         { label: "Completed", value: String(completedJobs), icon: CheckCircle, color: "text-green-400/80" },
                     ].map(({ label, value, icon: Icon, color }) => (
-                        <div key={label} className="relative p-6 bg-[#0a0a0a]/80 backdrop-blur-md border border-white/5 hover:border-white/10 transition-colors group">
-                            <div className="absolute -top-[1px] -left-[1px] h-[3px] w-[3px] bg-white/10 group-hover:bg-white/30 transition-colors"></div>
-                            <div className="absolute -bottom-[1px] -right-[1px] h-[3px] w-[3px] bg-white/10 group-hover:bg-white/30 transition-colors"></div>
+                        <div key={label} className="relative p-6 liquid-glass-strong glow-ring noise rounded-3xl transition-colors group">
 
                             <Icon className={`h-5 w-5 mb-4 ${color}`} strokeWidth={1.5} />
                             <p className="text-3xl font-light text-white tracking-tight">{value}</p>
@@ -381,7 +369,7 @@ export default function ProfilePage() {
                         </div>
                     ) : activeTab === "client" ? (
                         clientJobs.length === 0 ? (
-                            <div className="p-20 flex flex-col items-center justify-center border border-dashed border-white/5 bg-white/[0.01]">
+                            <div className="p-20 flex flex-col items-center justify-center liquid-glass-strong noise rounded-3xl">
                                 <Briefcase className="h-8 w-8 text-white/20 mb-4" strokeWidth={1} />
                                 <p className="text-white/40 text-sm font-light tracking-wide">You haven't hired anyone yet.</p>
                                 <a href="/client" className="mt-4 text-xs font-medium uppercase tracking-widest text-white/60 hover:text-white transition-colors border-b border-white/20 pb-1">
@@ -397,7 +385,7 @@ export default function ProfilePage() {
                         )
                     ) : (
                         freelancerJobs.length === 0 ? (
-                            <div className="p-20 flex flex-col items-center justify-center border border-dashed border-white/5 bg-white/[0.01]">
+                            <div className="p-20 flex flex-col items-center justify-center liquid-glass-strong noise rounded-3xl">
                                 <Coins className="h-8 w-8 text-white/20 mb-4" strokeWidth={1} />
                                 <p className="text-white/40 text-sm font-light tracking-wide">No projects assigned to your wallet yet.</p>
                                 <a href="/freelancer" className="mt-4 text-xs font-medium uppercase tracking-widest text-white/60 hover:text-white transition-colors border-b border-white/20 pb-1">

@@ -168,9 +168,9 @@ function ClientDashboardContent() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative z-10 p-12 bg-[#0a0a0a]/80 backdrop-blur-md border border-white/5 flex flex-col items-center text-center max-w-md w-full mx-4"
+          className="relative z-10 p-12 liquid-glass-strong glow-ring noise rounded-3xl flex flex-col items-center text-center max-w-md w-full mx-4"
         >
-          <div className="mb-6 p-4 bg-white/[0.03] border border-white/5 inline-flex">
+          <div className="mb-6 p-4 liquid-glass-strong rounded-2xl inline-flex">
             <Briefcase className="h-8 w-8 text-white/50" strokeWidth={1.5} />
           </div>
           <h2 className="text-3xl font-light text-white tracking-tight mb-3">
@@ -243,9 +243,9 @@ function ClientDashboardContent() {
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-5">
 
             {/* Create job form */}
-            <div className="relative lg:col-span-3 p-8 bg-[#0a0a0a]/80 backdrop-blur-md border border-white/5 hover:border-white/20 transition-all duration-500">
+            <div className="relative lg:col-span-3 p-8 md:p-10 liquid-glass-strong glow-ring noise rounded-3xl transition-all duration-500">
               <div className="mb-8 flex items-center gap-4">
-                <div className="flex h-10 w-10 items-center justify-center bg-white/[0.03] border border-white/5 text-white">
+                <div className="flex h-12 w-12 items-center justify-center liquid-glass rounded-2xl text-white">
                   <Plus className="h-5 w-5" strokeWidth={1.5} />
                 </div>
                 <h2 className="text-2xl font-light text-white tracking-tight">
@@ -320,7 +320,7 @@ function ClientDashboardContent() {
             </div>
 
             {/* Info panel */}
-            <div className="relative lg:col-span-2 p-8 bg-[#050505] border border-white/5 flex flex-col justify-between hover:border-white/10 transition-colors">
+            <div className="relative lg:col-span-2 p-8 md:p-10 liquid-glass-strong glow-ring noise rounded-3xl flex flex-col justify-between transition-colors">
               <div>
                 <div className="flex items-center gap-3 mb-6">
                   <Info className="w-5 h-5 text-white/50" strokeWidth={1.5} />
@@ -350,9 +350,9 @@ function ClientDashboardContent() {
                 </ul>
               </div>
 
-              <div className="mt-10 p-5 border border-white/5 bg-white/[0.02]">
-                <p className="text-xs text-white/50 leading-relaxed font-light">
-                  <span className="text-white/80 font-medium">Win-Win:</span>{" "}
+              <div className="mt-10 p-6 liquid-glass rounded-2xl">
+                <p className="text-xs text-gray-400 leading-relaxed font-light">
+                  <span className="text-white font-medium">Win-Win:</span>{" "}
                   Once funds are secured, your freelancer can instantly access up to 85% of their pay to get started. You stay protected, and they get paid without waiting.
                 </p>
               </div>
@@ -368,11 +368,11 @@ function ClientDashboardContent() {
             </h2>
 
             {jobsLoading ? (
-              <div className="p-12 border border-white/5 bg-white/[0.01] flex justify-center text-white/50">
+              <div className="p-12 liquid-glass-strong noise rounded-3xl flex justify-center text-white/50">
                 <Loader2 className="h-6 w-6 animate-spin" />
               </div>
             ) : jobs.length === 0 ? (
-              <div className="p-12 border border-white/5 bg-white/[0.01] text-center text-white/50 font-light text-sm text-balance">
+              <div className="p-12 liquid-glass-strong noise rounded-3xl text-center text-gray-400 font-light text-sm text-balance">
                 No active projects yet. When you secure a new contract, it will appear here.
               </div>
             ) : (
@@ -383,7 +383,7 @@ function ClientDashboardContent() {
                     : job.status;
 
                   return (
-                    <div key={job.id} className="p-6 bg-white/[0.02] border border-white/5 relative overflow-hidden group hover:border-white/20 transition-all">
+                    <div key={job.id} className="p-6 md:p-8 liquid-glass-strong glow-ring noise rounded-2xl relative overflow-hidden group transition-all">
                       <div className="flex justify-between items-start mb-4">
                         <div>
                           <p className="text-[10px] text-white/40 uppercase tracking-widest mb-1">

@@ -24,9 +24,7 @@ function Step({
         <div className="flex gap-6 group">
             {/* Left — number + line */}
             <div className="flex flex-col items-center">
-                <div className="w-12 h-12 bg-[#050505] border border-white/10 group-hover:border-white/30 transition-colors flex items-center justify-center shrink-0 z-10 relative" style={{ borderRadius: '2px' }}>
-                    <div className="absolute -top-[2px] -left-[2px] h-[4px] w-[4px] bg-white/20 group-hover:bg-white/60 transition-colors"></div>
-                    <div className="absolute -bottom-[2px] -right-[2px] h-[4px] w-[4px] bg-white/20 group-hover:bg-white/60 transition-colors"></div>
+                <div className="w-12 h-12 liquid-glass-strong glow-ring noise rounded-2xl flex items-center justify-center shrink-0 z-10 relative">
                     <span className="text-sm font-light text-white/70">{String(number).padStart(2, "0")}</span>
                 </div>
                 {!last && <div className="w-[1px] bg-gradient-to-b from-white/10 to-transparent flex-1 mt-4 mb-2" />}
@@ -35,21 +33,21 @@ function Step({
             {/* Right — content */}
             <div className={`flex-1 ${!last ? "pb-12" : ""}`}>
                 <div className="flex flex-col sm:flex-row sm:items-start gap-4 mb-4">
-                    <div className="p-3 bg-white/[0.02] border border-white/5 shrink-0 self-start group-hover:bg-white/[0.05] transition-colors" style={{ borderRadius: '2px' }}>
+                    <div className="p-3 liquid-glass rounded-xl shrink-0 self-start group-hover:bg-white/10 transition-colors">
                         <Icon className="h-6 w-6 text-white/80" strokeWidth={1.5} />
                     </div>
                     <div>
                         <div className="flex items-center gap-3 mb-2 flex-wrap">
                             <h3 className="text-xl font-light text-white tracking-wide">{title}</h3>
-                            <span className="text-[10px] px-2.5 py-1 bg-white/5 border border-white/10 text-white/50 uppercase tracking-widest font-medium" style={{ borderRadius: '2px' }}>
+                            <span className="text-[10px] px-3 py-1 liquid-glass rounded-lg text-white/50 uppercase tracking-widest font-medium">
                                 {tag}
                             </span>
                         </div>
                         <p className="text-white/60 font-light text-base leading-relaxed max-w-xl tracking-wide">{description}</p>
                     </div>
                 </div>
-                <div className="ml-0 sm:ml-[60px] p-5 bg-white/[0.01] border border-white/5 text-sm text-white/40 font-light leading-relaxed tracking-wide relative" style={{ borderRadius: '2px' }}>
-                    <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-white/10 group-hover:bg-white/30 transition-colors"></div>
+                <div className="ml-0 sm:ml-[60px] p-5 liquid-glass-strong noise rounded-2xl text-sm text-white/40 font-light leading-relaxed tracking-wide relative">
+                    <div className="absolute left-0 top-4 bottom-4 w-[2px] bg-white/10 group-hover:bg-white/30 transition-colors rounded-full"></div>
                     {detail}
                 </div>
             </div>
@@ -81,7 +79,7 @@ export default function HowItWorksPage() {
 
                 <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
                     className="text-center flex flex-col items-center gap-8">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/[0.03] border border-white/10 text-xs text-white/60 uppercase tracking-widest font-medium" style={{ borderRadius: '2px' }}>
+                    <div className="inline-flex items-center gap-2 px-4 py-2 liquid-glass rounded-full text-xs text-white/60 uppercase tracking-widest font-medium">
                         <Shield className="h-4 w-4" />
                         Guaranteed Payments
                     </div>
@@ -99,13 +97,11 @@ export default function HowItWorksPage() {
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 mt-4 w-full sm:w-auto">
                         <Link href="/freelancer"
-                            className="flex items-center justify-center gap-2 px-8 py-4 bg-white text-black font-medium hover:bg-white/90 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] w-full sm:w-auto"
-                            style={{ borderRadius: '2px' }}>
+                            className="flex items-center justify-center gap-2 px-8 py-4 bg-white rounded-xl text-black font-medium hover:bg-white/90 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] w-full sm:w-auto">
                             Start Getting Paid <ArrowRight className="h-4 w-4" />
                         </Link>
                         <Link href="/client"
-                            className="flex items-center justify-center gap-2 px-8 py-4 bg-transparent border border-white/20 text-white font-medium hover:bg-white/10 transition-all w-full sm:w-auto"
-                            style={{ borderRadius: '2px' }}>
+                            className="flex items-center justify-center gap-2 px-8 py-4 liquid-glass rounded-xl text-white font-medium hover:bg-white/10 transition-all w-full sm:w-auto">
                             Hire a Freelancer
                         </Link>
                     </div>
@@ -178,12 +174,7 @@ export default function HowItWorksPage() {
                         <p className="text-white/50 font-light tracking-wide text-lg">Why FlowFi beats traditional invoices and wire transfers.</p>
                     </div>
 
-                    <div className="p-8 bg-[#0a0a0a]/80 backdrop-blur-md border border-white/5 relative group" style={{ borderRadius: '2px' }}>
-                        {/* Corner Accents */}
-                        <div className="absolute -top-[1px] -left-[1px] h-[3px] w-[3px] bg-white/20 group-hover:bg-white transition-colors"></div>
-                        <div className="absolute -top-[1px] -right-[1px] h-[3px] w-[3px] bg-white/20 group-hover:bg-white transition-colors"></div>
-                        <div className="absolute -bottom-[1px] -left-[1px] h-[3px] w-[3px] bg-white/20 group-hover:bg-white transition-colors"></div>
-                        <div className="absolute -bottom-[1px] -right-[1px] h-[3px] w-[3px] bg-white/20 group-hover:bg-white transition-colors"></div>
+                    <div className="p-8 md:p-10 liquid-glass-strong glow-ring noise rounded-3xl relative group">
 
                         <div className="hidden sm:grid grid-cols-3 gap-4 pb-4 mb-2 border-b border-white/10">
                             <span className="text-xs text-white/40 uppercase tracking-widest font-medium">Feature</span>
@@ -228,10 +219,7 @@ export default function HowItWorksPage() {
                                 cannot: ["Access or steal the locked project funds"],
                             },
                         ].map(({ actor, can, cannot }) => (
-                            <div key={actor} className="relative p-8 bg-[#0a0a0a]/80 backdrop-blur-md border border-white/5 flex flex-col gap-6 group hover:border-white/10 transition-colors" style={{ borderRadius: '2px' }}>
-                                {/* Corner Accents */}
-                                <div className="absolute -top-[1px] -left-[1px] h-[3px] w-[3px] bg-white/10 group-hover:bg-white/40 transition-colors"></div>
-                                <div className="absolute -bottom-[1px] -right-[1px] h-[3px] w-[3px] bg-white/10 group-hover:bg-white/40 transition-colors"></div>
+                            <div key={actor} className="relative p-8 md:p-10 liquid-glass-strong glow-ring noise rounded-3xl flex flex-col gap-6 group transition-colors">
 
                                 <p className="text-xl font-light text-white tracking-wide border-b border-white/5 pb-4">{actor}</p>
 
@@ -268,7 +256,7 @@ export default function HowItWorksPage() {
 
 
                 <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-                    className="relative p-12 bg-white/[0.02] border border-white/5 flex flex-col md:flex-row items-center justify-between gap-8 text-center md:text-left group" style={{ borderRadius: '2px' }}>
+                    className="relative p-12 liquid-glass-strong glow-ring noise rounded-3xl flex flex-col md:flex-row items-center justify-between gap-8 text-center md:text-left group">
 
                     {/* Ambient Glow */}
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
@@ -281,8 +269,7 @@ export default function HowItWorksPage() {
                     </div>
                     <div className="flex flex-col sm:flex-row gap-4 shrink-0 relative z-10 w-full sm:w-auto">
                         <Link href="/freelancer"
-                            className="flex items-center justify-center gap-2 px-8 py-4 bg-white text-black font-medium hover:bg-white/90 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] w-full sm:w-auto"
-                            style={{ borderRadius: '2px' }}>
+                            className="flex items-center justify-center gap-2 px-8 py-4 bg-white text-black rounded-xl font-medium hover:bg-white/90 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] w-full sm:w-auto">
                             Get Paid Faster <ArrowRight className="h-4 w-4" />
                         </Link>
                     </div>

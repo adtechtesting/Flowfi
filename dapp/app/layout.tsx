@@ -1,23 +1,17 @@
 import type { Metadata } from "next";
-import { Barlow, Instrument_Serif } from "next/font/google";
+import { Nunito } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./components/providers";
 import { Navbar } from "./components/Navbar";
 
-const barlow = Barlow({
-  variable: "--font-barlow",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+const manrope = Nunito({
+
+  weight: ["200", "300", "400", "500", "600", "700", "800"],
+  variable: "--font-manrope",
   display: "swap",
 });
 
-const instrumentSerif = Instrument_Serif({
-  variable: "--font-instrument",
-  subsets: ["latin"],
-  weight: "400",
-  style: ["normal", "italic"],
-  display: "swap",
-});
+
 
 export const metadata: Metadata = {
   title: "FlowFi | Global Work Payments",
@@ -39,7 +33,7 @@ export default function RootLayout({
       <Providers>
         <body
           suppressHydrationWarning
-          className={`${barlow.variable} ${instrumentSerif.variable} antialiased`}
+          className={`${manrope.variable} font-sans antialiased`}
         >
           <Navbar />
           {children}
