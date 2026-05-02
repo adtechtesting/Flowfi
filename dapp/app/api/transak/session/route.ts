@@ -38,11 +38,14 @@ export async function POST(req: Request) {
         widgetParams: {
           apiKey: apiKey,
           referrerDomain: "flowfi-test.com",
-          cryptoCurrencyCode: 'USDC',
-          network: 'solana',
           productsAvailed: 'SELL',
-          cryptoAmount: amount,
+          isBuyOrSell: 'SELL',
+          cryptoCurrencyCode: 'USDC',
+          defaultCryptoCurrency: 'USDC',
+          network: 'solana',
+          defaultCryptoAmount: amount,
           fiatCurrency: 'INR',
+          defaultFiatCurrency: 'INR',
           walletAddress: walletAddress,
           exchangeScreenTitle: 'Withdraw to Bank'
         }

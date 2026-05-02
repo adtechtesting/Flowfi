@@ -28,8 +28,9 @@ export default function FreelancerDashboard() {
   const [txSuccess, setTxSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-
   const [usdcBalance, setUsdcBalance] = useState<number>(0);
+  const [exchangeRate, setExchangeRate] = useState<number | null>(null);
+  const [exchangeFee, setExchangeFee] = useState<number>(0);
 
   useEffect(() => {
     if (publicKey) {
@@ -48,6 +49,14 @@ export default function FreelancerDashboard() {
       const ata = await getAssociatedTokenAddress(USDC_MINT, publicKey);
       const balance = await connection.getTokenAccountBalance(ata);
       setUsdcBalance(balance.value.uiAmount || 0);
+
+      // Fetch real-time exchange rate
+      const rateRes = await fetch("/api/exchange-rate");
+      if (rateRes.ok) {
+        const rateData = await rateRes.json();
+        setExchangeRate(rateData.rate);
+        setExchangeFee(rateData.fee);
+      }
     } catch {
       setUsdcBalance(0);
     }
@@ -112,7 +121,7 @@ export default function FreelancerDashboard() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          amount: usdcAmount,
+          amount: usdcBalance,
           walletAddress: publicKey.toString()
         })
       });
@@ -137,6 +146,12 @@ export default function FreelancerDashboard() {
         console.log("Withdrawal successful:", data);
         transak.close();
         setTimeout(() => loadWalletBalance(), 5000);
+      });
+
+      Transak.on(Transak.EVENTS.TRANSAK_WIDGET_CLOSE, () => {
+        console.log("Transak widget closed by user");
+        transak.close();
+        setTimeout(() => loadWalletBalance(), 1000);
       });
     } catch (err: any) {
       console.error(err);
@@ -170,32 +185,61 @@ export default function FreelancerDashboard() {
       <div className="mx-auto max-w-5xl relative z-10">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-10">
 
-          {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/10 pb-8">
-            <div>
-              <h1 className="text-4xl font-light text-white tracking-tight">Active Projects</h1>
-              <p className="text-white/50 mt-2 font-light">Unlock your earnings immediately — no waiting for net-30 terms.</p>
+          {/* Page Title */}
+          <div>
+            <h1 className="text-5xl font-light text-white tracking-tight mb-4">Freelancer Hub</h1>
+            <p className="text-white/50 text-lg font-light leading-relaxed max-w-xl">
+              Access your earnings immediately. Withdraw up to 85% of your pay the moment a client secures funds on the network.
+            </p>
+          </div>
+
+          {/* Wallet / Withdraw Banner */}
+          <div className="liquid-glass-strong glow-ring noise p-8 md:p-10 rounded-[2rem] relative group flex flex-col lg:flex-row justify-between items-center gap-10">
+            <div className="absolute -top-[1px] -left-[1px] h-[3px] w-[3px] bg-white/20 group-hover:bg-white transition-colors"></div>
+            <div className="absolute -bottom-[1px] -right-[1px] h-[3px] w-[3px] bg-white/20 group-hover:bg-white transition-colors"></div>
+            <div className="absolute -bottom-[1px] -left-[1px] h-[3px] w-[3px] bg-white/20 group-hover:bg-white transition-colors"></div>
+            <div className="absolute -top-[1px] -right-[1px] h-[3px] w-[3px] bg-white/20 group-hover:bg-white transition-colors"></div>
+
+            <div className="flex-1 w-full lg:w-auto">
+              <p className="text-[10px] text-white/40 uppercase tracking-[0.2em] mb-4">Total Available to Withdraw</p>
+              <div className="flex items-baseline gap-4 mb-6 lg:mb-0">
+                <span className="text-6xl font-light text-white tracking-tight">{usdcBalance.toFixed(2)}</span>
+                <span className="text-2xl text-white/30 font-light tracking-wide">USDC</span>
+              </div>
             </div>
 
-            <div className="flex items-center gap-6 liquid-glass-strong glow-ring noise p-6 rounded-3xl relative group">
-              <div className="absolute -top-[1px] -left-[1px] h-[3px] w-[3px] bg-white/20 group-hover:bg-white transition-colors"></div>
-              <div className="absolute -bottom-[1px] -right-[1px] h-[3px] w-[3px] bg-white/20 group-hover:bg-white transition-colors"></div>
-
-              <div>
-                <p className="text-[10px] text-white/40 uppercase tracking-widest mb-1">Available to Withdraw</p>
-                <p className="text-2xl font-light text-white flex items-center gap-2">
-                  <Banknote className="h-5 w-5 text-green-400/80" />
-                  ${usdcBalance.toFixed(2)} <span className="text-sm text-white/40">USDC</span>
-                </p>
+            <div className="w-full lg:w-[480px] shrink-0 bg-black/40 border border-white/5 rounded-2xl p-6 flex flex-col justify-center">
+              <div className="flex justify-between items-center text-sm mb-4">
+                <span className="text-white/40 font-light">Exchange Rate</span>
+                <span className="text-white/80 font-mono text-xs tracking-wide">
+                  {exchangeRate ? `1 USDC ≈ ${exchangeRate.toFixed(2)} INR` : <Loader2 className="w-3 h-3 animate-spin" />}
+                </span>
               </div>
+              <div className="flex justify-between items-center text-sm mb-6 pt-4 border-t border-white/5">
+                <span className="text-white/40 font-light">You Receive</span>
+                <span className="text-green-400 font-mono text-lg tracking-wide">
+                  {exchangeRate ? `₹${((usdcBalance * exchangeRate) - exchangeFee).toFixed(2)}` : "..."}
+                </span>
+              </div>
+
               <button
                 onClick={() => handleWithdrawToBank(usdcBalance)}
                 disabled={usdcBalance <= 0}
-                className="px-5 py-2.5 bg-green-500/10 hover:bg-green-500/20 text-green-400 font-medium transition-all disabled:opacity-30 disabled:cursor-not-allowed border border-green-500/20"
+                className="w-full py-4 bg-white hover:bg-gray-100 text-black font-medium rounded-xl transition-all disabled:opacity-30 disabled:cursor-not-allowed text-[15px] shadow-[0_0_20px_rgba(255,255,255,0.1)] flex items-center justify-center gap-2"
               >
                 Withdraw to Bank
               </button>
+              <div className="text-[9px] text-white/30 text-center mt-4 uppercase tracking-widest flex items-center justify-center gap-2">
+                Powered by <img src="https://transak.com/favicon.ico" className="w-3 h-3 grayscale opacity-40" alt="Transak" />
+              </div>
             </div>
+          </div>
+
+          <div className="border-t border-white/10 pt-10">
+            <h2 className="text-3xl font-light text-white tracking-tight mb-8 flex items-center gap-4">
+              <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
+              Active Projects
+            </h2>
           </div>
 
           {/* Alerts */}
@@ -248,41 +292,41 @@ export default function FreelancerDashboard() {
                 const remainingUsdc = (parseFloat(totalUsdc) - parseFloat(advanceUsdc)).toFixed(2);
 
                 return (
-                  <div key={job.id} className="relative p-8 md:p-10 liquid-glass-strong glow-ring noise rounded-3xl transition-all flex flex-col md:flex-row gap-8 justify-between items-center group">
+                  <div key={job.id} className="relative p-6 md:p-8 liquid-glass-strong glow-ring noise rounded-3xl transition-all flex flex-col md:flex-row gap-8 justify-between items-center group">
                     {/* Micro Corner Accents */}
-                    <div className="absolute -top-[1px] -left-[1px] h-[3px] w-[3px] bg-white/30 group-hover:bg-white transition-colors"></div>
-                    <div className="absolute -top-[1px] -right-[1px] h-[3px] w-[3px] bg-white/30 group-hover:bg-white transition-colors"></div>
-                    <div className="absolute -bottom-[1px] -left-[1px] h-[3px] w-[3px] bg-white/30 group-hover:bg-white transition-colors"></div>
-                    <div className="absolute -bottom-[1px] -right-[1px] h-[3px] w-[3px] bg-white/30 group-hover:bg-white transition-colors"></div>
+                    <div className="absolute -top-[1px] -left-[1px] h-[3px] w-[3px] bg-white/10 group-hover:bg-white/40 transition-colors"></div>
+                    <div className="absolute -top-[1px] -right-[1px] h-[3px] w-[3px] bg-white/10 group-hover:bg-white/40 transition-colors"></div>
+                    <div className="absolute -bottom-[1px] -left-[1px] h-[3px] w-[3px] bg-white/10 group-hover:bg-white/40 transition-colors"></div>
+                    <div className="absolute -bottom-[1px] -right-[1px] h-[3px] w-[3px] bg-white/10 group-hover:bg-white/40 transition-colors"></div>
 
                     <div className="flex-1 w-full">
-                      <div className="flex items-center gap-4 mb-2">
-                        <h2 className="text-xl font-light text-white tracking-tight">{job.jobTitle}</h2>
-                        {isAdvanced && <span className="text-[10px] px-2 py-0.5 bg-white/5 text-white/50 uppercase tracking-widest border border-white/10">Advance Withdrawn</span>}
+                      <div className="flex items-center gap-4 mb-4">
+                        <h2 className="text-2xl font-light text-white tracking-tight">{job.jobTitle}</h2>
+                        {isAdvanced && <span className="text-[9px] px-2 py-0.5 bg-white/5 text-white/50 uppercase tracking-widest border border-white/10 rounded-sm">Advance Withdrawn</span>}
                       </div>
 
-                      <div className="flex gap-8 mt-4 border-t border-white/5 pt-4">
+                      <div className="flex flex-wrap gap-12 border-t border-white/5 pt-5">
                         <div>
-                          <p className="text-[10px] text-white/40 uppercase tracking-widest mb-1">Total Pay</p>
-                          <p className="text-white font-light">${totalUsdc} USDC</p>
+                          <p className="text-[9px] text-white/40 uppercase tracking-[0.2em] mb-1.5">Total Pay</p>
+                          <p className="text-white/80 font-light">${totalUsdc} USDC</p>
                         </div>
                         <div>
-                          <p className="text-[10px] text-white/40 uppercase tracking-widest mb-1">Available Now</p>
-                          <p className="text-amber-400 font-light">${advanceUsdc} USDC</p>
+                          <p className="text-[9px] text-white/40 uppercase tracking-[0.2em] mb-1.5">Available Now</p>
+                          <p className="text-amber-500/90 font-light">${advanceUsdc} USDC</p>
                         </div>
                         <div>
-                          <p className="text-[10px] text-white/40 uppercase tracking-widest mb-1">Final Release</p>
-                          <p className="text-white/60 font-light">${remainingUsdc} USDC</p>
+                          <p className="text-[9px] text-white/40 uppercase tracking-[0.2em] mb-1.5">Final Release</p>
+                          <p className="text-white/50 font-light">${remainingUsdc} USDC</p>
                         </div>
                       </div>
                     </div>
 
-                    <div className="w-full md:w-auto shrink-0 flex flex-col items-center md:items-end gap-3">
+                    <div className="w-full md:w-auto shrink-0 flex flex-col items-center md:items-end gap-3 mt-4 md:mt-0">
                       {advanceEligible ? (
                         <button
                           onClick={() => handleClaimAdvance(job)}
                           disabled={advanceLoadingId === job.id}
-                          className="w-full md:w-auto flex justify-center items-center gap-2 px-6 py-3 bg-white hover:bg-white/90 text-black font-medium transition-all disabled:opacity-50"
+                          className="w-full md:w-48 flex justify-center items-center gap-2 px-6 py-3.5 bg-white hover:bg-gray-100 text-black font-medium rounded-lg transition-all disabled:opacity-50 text-sm shadow-[0_0_15px_rgba(255,255,255,0.1)]"
                         >
                           {advanceLoadingId === job.id
                             ? <><Loader2 className="h-4 w-4 animate-spin" /> Processing...</>
@@ -290,16 +334,16 @@ export default function FreelancerDashboard() {
                           }
                         </button>
                       ) : onChainStatusKey === "released" ? (
-                        <div className="text-sm px-6 py-3 bg-white/5 text-white/70 font-medium flex items-center gap-2 border border-white/10">
-                          <CheckCircle className="h-4 w-4" /> Payment Complete
+                        <div className="w-full md:w-48 text-sm px-6 py-3.5 bg-white/5 text-white/70 font-light flex items-center justify-center gap-2 border border-white/10 rounded-lg">
+                          <CheckCircle className="h-4 w-4 text-white/50" /> Payment Complete
                         </div>
                       ) : isAdvanced ? (
-                        <div className="text-sm px-6 py-3 bg-white/5 text-white/40 font-medium flex items-center gap-2 border border-white/5">
-                          <CheckCircle className="h-4 w-4 text-amber-500/50" /> Advance Withdrawn
+                        <div className="w-full md:w-48 text-sm px-6 py-3.5 bg-white/5 text-white/60 font-light flex items-center justify-center gap-2 border border-white/5 rounded-lg">
+                          <CheckCircle className="h-4 w-4 text-amber-500/70" /> Advance Withdrawn
                         </div>
                       ) : (
-                        <div className="text-sm px-6 py-3 bg-white/5 text-white/30 font-light flex items-center gap-2 border border-transparent border-dashed">
-                          <Clock className="h-4 w-4" /> Awaiting Client Deposit
+                        <div className="w-full md:w-48 text-sm px-6 py-3.5 bg-transparent text-white/30 font-light flex items-center justify-center gap-2 border border-dashed border-white/10 rounded-lg">
+                          <Clock className="h-4 w-4" /> Awaiting Deposit
                         </div>
                       )}
                     </div>

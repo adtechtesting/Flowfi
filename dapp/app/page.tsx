@@ -97,45 +97,45 @@ const SectionHeading = ({ eyebrow, children, className = "" }: { eyebrow: string
   </Reveal>
 );
 
-// Marquee Data
-const logos = ["Stripe", "Solana", "Circle", "Coinbase", "Phantom", "Superteam", "Backpack"];
+
+const logos = ["Dodo Payments", "Solana", "Transak", "Earn", "Phantom", "Superteam", "Backpack"];
 
 // FAQ Data
 const faqs = [
   {
-    q: "How exactly does instant payout work?",
-    a: "Once the client funds the smart contract escrow, you can immediately withdraw up to 85% of your locked funds. The remaining amount is released automatically upon project completion.",
+    q: "How do I get paid instantly?",
+    a: "Once the client funds the job, you can withdraw up to 85% immediately. The rest is released after completion.",
   },
   {
-    q: "Do my clients need to know about crypto?",
-    a: "No. FlowFi abstracts the blockchain layer. Clients can fund the escrow using standard payment methods they are already comfortable with.",
+    q: "Do clients need crypto?",
+    a: "No. Clients pay using normal methods like cards or bank transfers.",
   },
   {
-    q: "How are disputes handled?",
-    a: "Our smart contracts include built-in dispute resolution mechanics. If an issue arises, the funds remain locked safely in escrow until the dispute is mediated.",
+    q: "How is the payment secured?",
+    a: "Funds are locked before work starts, so you don't need to chase payments.",
   },
   {
-    q: "Are there hidden wire fees?",
-    a: "Because we use Solana for fast, low-cost settlement, you avoid the massive 3-5% cuts and expensive wire transfer fees traditional platforms charge.",
+    q: "Are there hidden fees?",
+    a: "No. Everything is transparent — no surprise charges.",
   },
 ];
 
 
 const quotes = [
   {
-    quote: "FlowFi completely changed how I freelance. No more chasing invoices or waiting 30 days. I finish a milestone and the money is in my wallet instantly.",
+    quote: "I no longer wait 30 days to get paid. That alone changed everything.",
     name: "Alex Mercer",
-    role: "Senior UI/UX Designer",
+    role: "Freelancer",
   },
   {
-    quote: "As an agency, cash flow was our biggest bottleneck. Being able to guarantee payments securely without locking up capital has allowed us to scale 3x faster.",
+    quote: "Cash flow used to slow us down. Now it doesn't.",
     name: "Sarah Chen",
-    role: "Founder, Studio Nova",
+    role: "Agency Owner",
   },
   {
-    quote: "The easiest payment experience I've ever had. Smart contracts abstracting away all the complexity while giving me complete peace of mind.",
+    quote: "I can finally start working without worrying if the client will actually pay me.",
     name: "David Kim",
-    role: "Full-Stack Engineer",
+    role: "Independent Developer",
   },
 ];
 
@@ -144,7 +144,6 @@ export default function LandingPage() {
 
   return (
     <div className="bg-black min-h-screen w-full flex flex-col font-sans selection:bg-white/20 selection:text-white">
-
 
       <div className="relative min-h-[100svh] w-full overflow-hidden flex flex-col justify-end bg-black border-b border-white/5">
         <video
@@ -164,22 +163,22 @@ export default function LandingPage() {
             <div className="flex flex-col items-center w-full">
               <div className="flex flex-col leading-[1.1] mb-6">
                 <AnimatedHeading
-                  text="Get paid instantly."
-                  className="text-5xl md:text-[72px] lg:text-[84px] font-normal text-white tracking-tightest"
+                  text={"Get paid instantly.\nNot 30 days later."}
+                  className="text-5xl md:text-[72px] lg:text-[84px] font-normal text-white tracking-tightest whitespace-pre-wrap"
                   delay={200}
                   charDelay={40}
                 />
 
                 <FadeIn delay={1200} duration={800}>
-                  <h2 className="text-4xl md:text-[60px] font-normal text-white/90 tracking-tightest mt-2 gradient-text">
-                    Stop waiting weeks for your money.
+                  <h2 className="text-3xl md:text-[40px] font-normal text-white/90 tracking-tight mt-6">
+                    Finish the work → access your money <span className="text-indigo-300">immediately.</span>
                   </h2>
                 </FadeIn>
               </div>
 
               <FadeIn delay={1600} duration={1000}>
                 <p className="max-w-xl text-lg md:text-xl text-gray-400 font-sans mb-10 leading-relaxed tracking-wide mx-auto">
-                  Clients pay normally. You unlock your earnings immediately — no delays, no chasing invoices.
+                  No delays. No chasing invoices. No waiting on approvals.
                 </p>
               </FadeIn>
 
@@ -194,10 +193,13 @@ export default function LandingPage() {
                   </Link>
                   <Link
                     href="/client"
-                    className="liquid-glass border border-white/20 text-white px-8 py-4 rounded-xl font-medium hover:bg-white hover:text-black transition-colors text-lg flex items-center justify-center"
+                    className="liquid-glass border border-white/20 text-white px-8 py-4 rounded-xl font-medium hover:bg-white/105 hover:text-white/70 transition-colors text-lg flex items-center justify-center"
                   >
                     Create a Job
                   </Link>
+                </div>
+                <div className="mt-8 text-sm text-gray-500 font-medium tracking-wide text-balance">
+                  Clients pay using familiar methods (cards, bank transfers) — powered by Dodo Payments.
                 </div>
               </FadeIn>
             </div>
@@ -208,7 +210,7 @@ export default function LandingPage() {
       {/* ----------------- MARQUEE ----------------- */}
       <section className="relative bg-black py-16 overflow-hidden border-b border-white/5">
         <div className="text-center text-xs uppercase tracking-[0.3em] text-gray-500 mb-10">
-          Powered by the best infrastructure in Web3
+          Powered by the best
         </div>
         <div className="relative">
           <div className="pointer-events-none absolute inset-y-0 left-0 w-32 z-10" style={{ background: "linear-gradient(to right, #000, transparent)" }} />
@@ -229,18 +231,18 @@ export default function LandingPage() {
         <div className="relative max-w-6xl mx-auto">
           <SectionHeading eyebrow="01 — The Problem" className="text-4xl md:text-6xl lg:text-7xl font-normal max-w-4xl tracking-tightest">
             Waiting to get paid is <br className="hidden md:block" />
-            <span className="gradient-text">completely broken.</span>
+            <span className="gradient-text">the real problem.</span>
           </SectionHeading>
 
           <div className="mt-20 grid md:grid-cols-12 gap-10 items-start">
             <Reveal delay={100} className="md:col-span-7">
               <p className="text-xl md:text-2xl text-gray-200 leading-snug tracking-tight">
-                You do the work — but the money comes late. Freelancers wait 30–90 days for payments, while small businesses struggle to bridge the massive cash flow gaps left behind.
+                You do the work. But the money comes late. Freelancers wait weeks — sometimes months.
               </p>
             </Reveal>
             <Reveal delay={250} className="md:col-span-5">
               <p className="text-base text-gray-400 leading-relaxed">
-                Cross-border payments are slow, expensive, and opaque. The traditional financial infrastructure forces you to act like a bank, fronting capital and chasing invoices instead of focusing on the work that actually matters.
+                Payments get delayed, lost, or stuck. Cross-border transfers are slow and expensive. You shouldn't have to wait to use money you've already earned.
               </p>
             </Reveal>
           </div>
@@ -275,21 +277,21 @@ export default function LandingPage() {
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-8 mb-20">
             <SectionHeading eyebrow="02 — The Solution" className="text-4xl md:text-6xl lg:text-7xl font-normal max-w-3xl tracking-tightest">
               Get your money <br />
-              <span className="gradient-text">when you earn it.</span>
+              <span className="gradient-text">the moment it's secured.</span>
             </SectionHeading>
             <Reveal delay={150}>
               <p className="max-w-sm text-gray-400 leading-relaxed">
-                FlowFi lets you unlock your earnings instantly. Money is secured upfront, withdraw most of it immediately.
+                FlowFi changes how payments work. Once a client funds a job, your earnings are secured upfront — and you can access most of it instantly. No waiting. No uncertainty.
               </p>
             </Reveal>
           </div>
 
           <div className="grid md:grid-cols-2 gap-5">
             {[
-              { id: "01", title: "Secure Payments", desc: "Money is locked safely before work begins. No risk, no chasing clients.", points: ["Smart contract secured", "No chasing clients", "Escrow protection"] },
-              { id: "02", title: "Instant Payouts", desc: "Withdraw up to 85% immediately — even before the project is completed.", points: ["Zero approval delays", "Instant liquidity", "Finish work later"] },
-              { id: "03", title: "Global Made Easy", desc: "Clients pay like usual. You receive money instantly, anywhere in the world.", points: ["No wire delays", "Accept standard cards", "Worldwide payouts"] },
-              { id: "04", title: "Lower Fees", desc: "No expensive wire transfers. No hidden cuts taking a chunk of your earnings.", points: ["No hidden cuts", "Predictable costs", "Transparent pricing"] }
+              { id: "01", title: "Payments Secured First", desc: "Clients fund the job before work begins. Your money is guaranteed from day one.", points: ["No chasing invoices", "Escrow protection"] },
+              { id: "02", title: "Instant Access to Earnings", desc: "Withdraw up to 85% immediately — even before the work is finished.", points: ["Zero approval delays", "Access cash immediately"] },
+              { id: "03", title: "Works Globally", desc: "Clients pay with cards or bank transfers. You receive money instantly, anywhere.", points: ["No cross-border delays", "Familiar payment methods"] },
+              { id: "04", title: "No Hidden Fees", desc: "No expensive wire transfers. No unexpected cuts.", points: ["Predictable costs", "Transparent pricing"] }
             ].map((s, i) => (
               <Reveal key={s.id} delay={i * 120}>
                 <div className="liquid-glass-strong glow-ring rounded-3xl p-8 md:p-10 h-full flex flex-col noise relative group hover:bg-white/[0.05] transition-colors">
@@ -319,7 +321,7 @@ export default function LandingPage() {
       <section className="relative bg-black text-white py-32 px-6 md:px-12 lg:px-16 overflow-hidden border-t border-white/5">
         <div className="max-w-6xl mx-auto">
           <SectionHeading eyebrow="03 — How it works" className="text-4xl md:text-6xl lg:text-7xl font-normal max-w-3xl tracking-tightest">
-            A process built for real work, <br className="hidden md:block" />not delays.
+            Simple. Fast. <br className="hidden md:block" />Built for real work.
           </SectionHeading>
 
           <div className="mt-20 relative">
@@ -327,10 +329,10 @@ export default function LandingPage() {
 
             <div className="grid md:grid-cols-4 gap-6">
               {[
-                { n: "01", title: "Client Pays", body: "Client funds the job using normal payment methods. No crypto knowledge required." },
-                { n: "02", title: "Money Secured", body: "Funds are locked safely and guaranteed by our smart contracts." },
-                { n: "03", title: "Get Paid Early", body: "Withdraw most of your earnings instantly. Skip the 30-day waiting period." },
-                { n: "04", title: "Final Payment", body: "Remaining amount is released immediately after project completion." }
+                { n: "01", title: "Client Pays", body: "Client pays using normal methods (cards, bank, etc.) via Dodo Payments." },
+                { n: "02", title: "Funds Secured", body: "The payment is locked safely and reserved for you." },
+                { n: "03", title: "Get Paid Early", body: "You can instantly access most of your earnings — no waiting." },
+                { n: "04", title: "Final Settlement", body: "The remaining amount is released after completion." }
               ].map((s, i) => (
                 <Reveal key={s.n} delay={i * 120}>
                   <div className="relative">
@@ -353,7 +355,7 @@ export default function LandingPage() {
         <div className="pointer-events-none absolute inset-0 bg-grid opacity-30" />
         <div className="relative max-w-6xl mx-auto">
           <SectionHeading eyebrow="04 — In their words" className="text-4xl md:text-6xl lg:text-7xl font-normal max-w-3xl tracking-tightest">
-            Freelancers we've empowered,<br />in their own words.
+            Built for people who work, <br />not wait.
           </SectionHeading>
 
           <div className="mt-20 grid md:grid-cols-3 gap-5">
@@ -383,13 +385,15 @@ export default function LandingPage() {
 
         <div className="relative max-w-6xl mx-auto text-center flex flex-col items-center">
           <SectionHeading eyebrow="05 — Our Focus" className="text-4xl md:text-6xl lg:text-7xl font-normal max-w-4xl tracking-tightest">
-            Built for real work, <br className="hidden md:block" />
-            <span className="gradient-text">not speculation.</span>
+            This isn't crypto. <br className="hidden md:block" />
+            <span className="gradient-text">It's better payments.</span>
           </SectionHeading>
 
           <Reveal delay={200}>
-            <p className="mt-8 text-gray-400 text-lg md:text-xl font-light tracking-wide leading-relaxed max-w-2xl">
-              FlowFi is designed for freelancers and businesses who need faster payments — not crypto hype. Powered by secure infrastructure for instant, low-cost transactions.
+            <p className="mt-8 text-gray-400 text-lg md:text-xl font-light tracking-wide leading-relaxed max-w-2xl text-center">
+              FlowFi is built for freelancers and businesses who need faster payments — not complexity. Behind the scenes, we use modern infrastructure to make payments faster, cheaper, and reliable.
+              <br /><br />
+              <span className="text-gray-200">But for you, it just works.</span>
             </p>
           </Reveal>
         </div>
@@ -445,18 +449,18 @@ export default function LandingPage() {
             <div className="liquid-glass-strong glow-ring rounded-[2rem] p-10 md:p-20 text-center noise relative">
               <div className="text-xs uppercase tracking-[0.3em] text-gray-400 mb-8">Ready to start?</div>
               <h2 className="text-4xl md:text-6xl lg:text-8xl font-normal mb-8 tracking-tightest">
-                Get paid on <br />
-                <span className="gradient-text">your own terms.</span>
+                Stop waiting for <br />
+                <span className="gradient-text">your money.</span>
               </h2>
               <p className="text-lg md:text-xl text-gray-300 max-w-xl mx-auto mb-12">
-                Whether you're a freelancer tired of waiting 30 days or a client wanting to securely fund milestones — let's build the future of work.
+                Get paid when the work starts — not weeks later.
               </p>
               <div className="flex flex-wrap gap-4 justify-center relative z-20">
                 <Link href="/freelancer" className="group bg-white text-black px-8 py-4 rounded-xl font-medium hover:bg-gray-100 transition-all inline-flex items-center gap-2">
                   Get Paid Now
                   <span className="transition-transform group-hover:translate-x-1">→</span>
                 </Link>
-                <Link href="/client" className="liquid-glass border border-white/20 text-white px-8 py-4 rounded-xl font-medium hover:bg-white hover:text-black transition-colors">
+                <Link href="/client" className="liquid-glass border border-white/20 text-white px-8 py-4 rounded-xl font-medium hover:bg-white hover:text-white transition-colors">
                   Create a Job
                 </Link>
               </div>

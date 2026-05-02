@@ -45,6 +45,56 @@ function ClientDashboardContent() {
   const [isCreating, setIsCreating] = useState(false);
   const [approvingId, setApprovingId] = useState<string | null>(null);
 
+  const [editingJob, setEditingJob] = useState<any>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
+
+  const handleDeleteJob = async (id: string) => {
+    if (!confirm("Are you sure you want to cancel and delete this project?")) return;
+    setIsDeletingId(id);
+    setError(null);
+    try {
+      const res = await fetch(`/api/invoices/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to delete project");
+      }
+      await loadMyJobs();
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setIsDeletingId(null);
+    }
+  };
+
+  const handleUpdateJob = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingJob) return;
+    setIsUpdating(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/invoices/${editingJob.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jobTitle: editingJob.jobTitle,
+          amount: editingJob.amount,
+          freelancerWallet: editingJob.freelancerWallet,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to update project");
+      }
+      setEditingJob(null);
+      await loadMyJobs();
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const handleApproveMilestone = async (job: any) => {
     if (!publicKey || !signTransaction) return setError("Connect wallet first");
     setApprovingId(job.id);
@@ -198,11 +248,11 @@ function ClientDashboardContent() {
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/10 pb-8">
             <div>
-              <h1 className="text-4xl font-light text-white tracking-tight">
+              <h1 className="text-5xl font-light text-white tracking-tight mb-4">
                 Client Dashboard
               </h1>
-              <p className="text-white/50 mt-2 font-light">
-                Manage your active projects and secure payments.
+              <p className="text-white/50 text-lg font-light leading-relaxed max-w-xl">
+                Manage your active projects, lock funds securely, and release payments exactly when the work is done.
               </p>
             </div>
             <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10">
@@ -243,61 +293,69 @@ function ClientDashboardContent() {
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-5">
 
             {/* Create job form */}
-            <div className="relative lg:col-span-3 p-8 md:p-10 liquid-glass-strong glow-ring noise rounded-3xl transition-all duration-500">
-              <div className="mb-8 flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center liquid-glass rounded-2xl text-white">
+            <div className="relative lg:col-span-3 p-8 md:p-10 liquid-glass-strong glow-ring noise rounded-[2rem] transition-all duration-500">
+              <div className="absolute -top-[1px] -left-[1px] h-[3px] w-[3px] bg-white/20"></div>
+              <div className="absolute -bottom-[1px] -right-[1px] h-[3px] w-[3px] bg-white/20"></div>
+
+              <div className="mb-10 flex items-center gap-4 border-b border-white/5 pb-6">
+                <div className="flex h-12 w-12 items-center justify-center bg-white/5 border border-white/10 rounded-2xl text-white">
                   <Plus className="h-5 w-5" strokeWidth={1.5} />
                 </div>
-                <h2 className="text-2xl font-light text-white tracking-tight">
-                  Start a New Project
-                </h2>
+                <div>
+                  <h2 className="text-2xl font-light text-white tracking-tight">
+                    Start a New Project
+                  </h2>
+                  <p className="text-sm text-white/40 font-light mt-1">Deploy capital securely into a new smart contract.</p>
+                </div>
               </div>
 
               <form onSubmit={handleCreateJob} className="flex flex-col gap-6">
-                <div>
-                  <label className="mb-2 block text-xs font-medium tracking-[0.1em] text-white/50 uppercase">
-                    Project Name
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    className="w-full bg-white/[0.02] border border-white/10 px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-white/30 transition-all font-light"
-                    placeholder="e.g. Website Redesign"
-                    value={formData.jobTitle}
-                    onChange={e => setFormData({ ...formData, jobTitle: e.target.value })}
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-xs font-medium tracking-[0.1em] text-white/50 uppercase">
-                    Total Payment (USD)
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 font-light">
-                      $
-                    </span>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="mb-2 block text-[10px] font-medium tracking-widest text-white/40 uppercase">
+                      Project Name
+                    </label>
                     <input
-                      type="number"
-                      min="1"
-                      step="0.01"
+                      type="text"
                       required
-                      className="w-full bg-white/[0.02] border border-white/10 pl-8 pr-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-white/30 transition-all font-light"
-                      placeholder="1000"
-                      value={formData.amount}
-                      onChange={e => setFormData({ ...formData, amount: e.target.value })}
+                      className="w-full bg-white/[0.02] border border-white/10 px-5 py-3.5 rounded-xl text-white placeholder-white/20 focus:outline-none focus:border-white/30 focus:bg-white/[0.04] transition-all font-light"
+                      placeholder="e.g. Website Redesign"
+                      value={formData.jobTitle}
+                      onChange={e => setFormData({ ...formData, jobTitle: e.target.value })}
                     />
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-[10px] font-medium tracking-widest text-white/40 uppercase">
+                      Total Payment (USD)
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-5 top-1/2 -translate-y-1/2 text-white/40 font-light">
+                        $
+                      </span>
+                      <input
+                        type="number"
+                        min="1"
+                        step="0.01"
+                        required
+                        className="w-full bg-white/[0.02] border border-white/10 pl-9 pr-5 py-3.5 rounded-xl text-white placeholder-white/20 focus:outline-none focus:border-white/30 focus:bg-white/[0.04] transition-all font-light"
+                        placeholder="1000.00"
+                        value={formData.amount}
+                        onChange={e => setFormData({ ...formData, amount: e.target.value })}
+                      />
+                    </div>
                   </div>
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-xs font-medium tracking-[0.1em] text-white/50 uppercase">
+                  <label className="mb-2 block text-[10px] font-medium tracking-widest text-white/40 uppercase">
                     Freelancer Wallet Address
                   </label>
                   <input
                     type="text"
                     required
-                    className="w-full bg-white/[0.02] border border-white/10 px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-white/30 transition-all font-mono text-sm"
-                    placeholder="Enter public key..."
+                    className="w-full bg-white/[0.02] border border-white/10 px-5 py-3.5 rounded-xl text-white placeholder-white/20 focus:outline-none focus:border-white/30 focus:bg-white/[0.04] transition-all font-mono text-sm tracking-wide"
+                    placeholder="Enter Solana public key..."
                     value={formData.freelancerWallet}
                     onChange={e =>
                       setFormData({ ...formData, freelancerWallet: e.target.value })
@@ -308,10 +366,10 @@ function ClientDashboardContent() {
                 <button
                   type="submit"
                   disabled={isCreating}
-                  className="mt-4 flex items-center justify-center gap-2 px-8 py-4 bg-white hover:bg-white/90 text-black font-medium transition-all w-full disabled:opacity-70 disabled:cursor-not-allowed"
+                  className="mt-6 flex items-center justify-center gap-2 px-8 py-4 bg-white hover:bg-gray-100 text-black font-medium rounded-xl transition-all w-full disabled:opacity-50 shadow-[0_0_20px_rgba(255,255,255,0.1)]"
                 >
                   {isCreating ? (
-                    <><Loader2 className="h-5 w-5 animate-spin" /> Securing Funds...</>
+                    <><Loader2 className="h-5 w-5 animate-spin" /> Securing Funds on Network...</>
                   ) : (
                     "Secure Funds & Hire"
                   )}
@@ -376,56 +434,84 @@ function ClientDashboardContent() {
                 No active projects yet. When you secure a new contract, it will appear here.
               </div>
             ) : (
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="flex flex-col gap-6">
                 {jobs.map((job) => {
                   const onChainStatus = job.onChain
                     ? Object.keys(job.onChain.status)[0]
                     : job.status;
 
                   return (
-                    <div key={job.id} className="p-6 md:p-8 liquid-glass-strong glow-ring noise rounded-2xl relative overflow-hidden group transition-all">
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <p className="text-[10px] text-white/40 uppercase tracking-widest mb-1">
-                            {new Date(job.createdAt).toLocaleDateString()}
-                          </p>
-                          <h3 className="text-lg font-light text-white">{job.jobTitle}</h3>
+                    <div key={job.id} className="relative p-6 md:p-8 liquid-glass-strong glow-ring noise rounded-3xl transition-all flex flex-col md:flex-row gap-8 justify-between items-center group">
+                      {/* Micro Corner Accents */}
+                      <div className="absolute -top-[1px] -left-[1px] h-[3px] w-[3px] bg-white/10 group-hover:bg-white/40 transition-colors"></div>
+                      <div className="absolute -top-[1px] -right-[1px] h-[3px] w-[3px] bg-white/10 group-hover:bg-white/40 transition-colors"></div>
+                      <div className="absolute -bottom-[1px] -left-[1px] h-[3px] w-[3px] bg-white/10 group-hover:bg-white/40 transition-colors"></div>
+                      <div className="absolute -bottom-[1px] -right-[1px] h-[3px] w-[3px] bg-white/10 group-hover:bg-white/40 transition-colors"></div>
+
+                      <div className="flex-1 w-full">
+                        <div className="flex items-center gap-4 mb-4">
+                          <h2 className="text-2xl font-light text-white tracking-tight">{job.jobTitle}</h2>
+                          <span className="text-[9px] px-2 py-0.5 bg-white/5 text-white/50 uppercase tracking-widest border border-white/10 rounded-sm">
+                            {onChainStatus.replace(/_/g, ' ')}
+                          </span>
                         </div>
-                        <div className="text-right">
-                          <p className="text-xl font-light text-white">${job.amount / 100}</p>
-                          <p className="text-[10px] text-white/40 uppercase tracking-widest">Secured</p>
+
+                        <div className="flex flex-wrap gap-12 border-t border-white/5 pt-5">
+                          <div>
+                            <p className="text-[9px] text-white/40 uppercase tracking-[0.2em] mb-1.5">Date Created</p>
+                            <p className="text-white/80 font-light">{new Date(job.createdAt).toLocaleDateString()}</p>
+                          </div>
+                          <div>
+                            <p className="text-[9px] text-white/40 uppercase tracking-[0.2em] mb-1.5">Total Secured</p>
+                            <p className="text-green-400/90 font-light">${job.amount / 100} USDC</p>
+                          </div>
+                          <div>
+                            <p className="text-[9px] text-white/40 uppercase tracking-[0.2em] mb-1.5">Freelancer</p>
+                            <p className="text-white/50 font-mono text-sm mt-0.5">{job.freelancerWallet.slice(0, 4)}...{job.freelancerWallet.slice(-4)}</p>
+                          </div>
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between mt-6 pt-4 border-t border-white/5">
-                        <span className="text-[10px] uppercase tracking-widest font-mono p-1.5 border border-white/10 bg-white/5 text-white/80">
-                          {onChainStatus.replace(/_/g, ' ')}
-                        </span>
-                        <div className="flex gap-2">
-                          {job.status === "PENDING" && (
-                            <div className="flex items-center gap-3">
-                              <span className="text-xs text-red-500/70 py-1 px-2">
-                                Waiting for Funds
-                              </span>
-                              <button
-                                onClick={() => handleForceFund(job)}
-                                className="text-[10px] px-3 py-1.5 bg-blue-500/20 text-blue-400 border border-blue-500/30 hover:bg-blue-500/30 transition-colors uppercase tracking-widest"
-                              >
-                                Force Fund (Dev)
-                              </button>
-                            </div>
-                          )}
-                          {(job.status === "ESCROW_FUNDED" || job.status === "ADVANCED") && (
+                      <div className="w-full md:w-auto shrink-0 flex flex-col items-center md:items-end gap-3 mt-4 md:mt-0">
+                        {job.status === "PENDING" && (
+                          <div className="w-full md:w-48 flex flex-col gap-2">
                             <button
-                              onClick={() => handleApproveMilestone(job)}
-                              disabled={approvingId === job.id}
-                              className="text-xs px-4 py-1.5 bg-white text-black hover:bg-white/80 transition-colors disabled:opacity-50 flex items-center gap-2 font-medium"
+                              onClick={() => setEditingJob({ ...job, amount: job.amount / 100 })}
+                              className="w-full text-[10px] py-2 bg-white/5 text-white/70 border border-white/10 hover:bg-white/10 transition-colors uppercase tracking-widest rounded-lg"
                             >
-                              {approvingId === job.id ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
-                              Approve & Release Funds
+                              Edit Details
                             </button>
-                          )}
-                        </div>
+                            <button
+                              onClick={() => handleDeleteJob(job.id)}
+                              disabled={isDeletingId === job.id}
+                              className="w-full text-[10px] py-2 bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-colors uppercase tracking-widest disabled:opacity-50 rounded-lg"
+                            >
+                              {isDeletingId === job.id ? "..." : "Delete Project"}
+                            </button>
+                            <button
+                              onClick={() => handleForceFund(job)}
+                              className="w-full text-[10px] py-2 bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 transition-colors uppercase tracking-widest rounded-lg"
+                            >
+                              Force Fund (Dev)
+                            </button>
+                          </div>
+                        )}
+
+                        {(job.status === "ESCROW_FUNDED" || job.status === "ADVANCED") && (
+                          <button
+                            onClick={() => handleApproveMilestone(job)}
+                            disabled={approvingId === job.id}
+                            className="w-full md:w-48 flex justify-center items-center gap-2 px-6 py-3.5 bg-white hover:bg-gray-100 text-black font-medium rounded-lg transition-all disabled:opacity-50 text-sm shadow-[0_0_15px_rgba(255,255,255,0.1)]"
+                          >
+                            {approvingId === job.id ? <><Loader2 className="h-4 w-4 animate-spin" /> Approving...</> : "Approve & Release"}
+                          </button>
+                        )}
+                        
+                        {(job.status === "RELEASED" || job.status === "COMPLETED") && (
+                          <div className="w-full md:w-48 text-sm px-6 py-3.5 bg-white/5 text-white/70 font-light flex items-center justify-center gap-2 border border-white/10 rounded-lg">
+                            <CheckCircle className="h-4 w-4 text-white/50" /> Fully Released
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
@@ -435,6 +521,83 @@ function ClientDashboardContent() {
           </div>
         </motion.div>
       </div>
+      {/* Edit Job Modal */}
+      <AnimatePresence>
+        {editingJob && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-md liquid-glass-strong glow-ring noise rounded-3xl p-8"
+            >
+              <h3 className="text-xl font-light text-white mb-6">Edit Project</h3>
+              <form onSubmit={handleUpdateJob} className="flex flex-col gap-4">
+                <div>
+                  <label className="mb-2 block text-xs font-medium tracking-[0.1em] text-white/50 uppercase">
+                    Project Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    className="w-full bg-white/[0.02] border border-white/10 px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-white/30 transition-all font-light"
+                    value={editingJob.jobTitle}
+                    onChange={e => setEditingJob({ ...editingJob, jobTitle: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="mb-2 block text-xs font-medium tracking-[0.1em] text-white/50 uppercase">
+                    Amount (USD)
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    step="0.01"
+                    required
+                    className="w-full bg-white/[0.02] border border-white/10 px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-white/30 transition-all font-light"
+                    value={editingJob.amount}
+                    onChange={e => setEditingJob({ ...editingJob, amount: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="mb-2 block text-xs font-medium tracking-[0.1em] text-white/50 uppercase">
+                    Freelancer Wallet
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    className="w-full bg-white/[0.02] border border-white/10 px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-white/30 transition-all font-mono text-sm"
+                    value={editingJob.freelancerWallet}
+                    onChange={e => setEditingJob({ ...editingJob, freelancerWallet: e.target.value })}
+                  />
+                </div>
+                <div className="flex gap-3 mt-4">
+                  <button
+                    type="button"
+                    onClick={() => setEditingJob(null)}
+                    className="flex-1 py-3 bg-white/5 text-white border border-white/10 hover:bg-white/10 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isUpdating}
+                    className="flex-1 py-3 bg-white text-black font-medium hover:bg-white/90 transition-colors disabled:opacity-50 flex justify-center items-center gap-2"
+                  >
+                    {isUpdating && <Loader2 className="h-4 w-4 animate-spin" />}
+                    Save Changes
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
