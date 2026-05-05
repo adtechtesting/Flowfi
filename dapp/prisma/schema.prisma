@@ -22,6 +22,8 @@ model Invoice {
   webhookProcessed Boolean       @default(false)
   txSignature      String?
   advanceTxSig     String?
+  durationDays     Int           @default(30)
+  scheduledReleaseAt DateTime?
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
 }

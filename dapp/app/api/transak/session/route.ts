@@ -3,11 +3,15 @@ import { NextResponse } from 'next/server';
 export async function POST(req: Request) {
   try {
     const { amount, walletAddress } = await req.json();
+    console.log('Initializing Transak Session:', { amount, walletAddress });
 
     const apiKey = process.env.NEXT_PUBLIC_TRANSAK_API_KEY;
-    const apiSecret = process.env.TRANSAK_API_SECRET || "null"
+    const apiSecret = process.env.TRANSAK_API_SECRET;
 
+    if (!apiKey) throw new Error("NEXT_PUBLIC_TRANSAK_API_KEY is missing");
+    if (!apiSecret) throw new Error("TRANSAK_API_SECRET is missing");
 
+    // 1. Get Access Token
     const tokenResponse = await fetch('https://api-stg.transak.com/partners/api/v2/refresh-token', {
       method: 'POST',
       headers: {
@@ -18,17 +22,17 @@ export async function POST(req: Request) {
     });
 
     const tokenData = await tokenResponse.json();
-
     if (!tokenResponse.ok) {
-      throw new Error(tokenData.error?.message || tokenData.message || 'Failed to generate Transak Access Token from Secret');
+      console.error('Transak Token Error:', tokenData);
+      return NextResponse.json({ 
+        error: `Token Error: ${tokenData.error?.message || tokenData.message || 'Unknown'}` 
+      }, { status: tokenResponse.status });
     }
 
     const accessToken = tokenData.data?.accessToken;
 
-    if (!accessToken) throw new Error("No access token returned from Transak.");
-
-
-    const response = await fetch('https://api-gateway-stg.transak.com/api/v2/auth/session', {
+    // 2. Create Session
+    const sessionResponse = await fetch('https://api-gateway-stg.transak.com/api/v2/auth/session', {
       method: 'POST',
       headers: {
         'access-token': accessToken,
@@ -37,30 +41,32 @@ export async function POST(req: Request) {
       body: JSON.stringify({
         widgetParams: {
           apiKey: apiKey,
-          referrerDomain: "flowfi-test.com",
           productsAvailed: 'SELL',
           isBuyOrSell: 'SELL',
           cryptoCurrencyCode: 'USDC',
-          defaultCryptoCurrency: 'USDC',
           network: 'solana',
-          defaultCryptoAmount: amount,
-          fiatCurrency: 'INR',
-          defaultFiatCurrency: 'INR',
+          cryptoAmount: amount,
           walletAddress: walletAddress,
-          exchangeScreenTitle: 'Withdraw to Bank'
+          fiatCurrency: 'INR',
+          paymentMethod: 'inr_bank_transfer',
+          exchangeScreenTitle: 'Withdraw to Bank',
+          environment: 'STAGING'
         }
       })
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error?.message || data.message || 'Failed to create Transak session');
+    const sessionData = await sessionResponse.json();
+    if (!sessionResponse.ok) {
+      console.error('Transak Session Error:', sessionData);
+      return NextResponse.json({ 
+        error: `Session Error: ${sessionData.error?.message || sessionData.message || 'Unknown'}` 
+      }, { status: sessionResponse.status });
     }
 
-    return NextResponse.json({ widgetUrl: data.data.widgetUrl });
+    return NextResponse.json({ widgetUrl: sessionData.data.widgetUrl });
+
   } catch (error: any) {
-    console.error('Transak Session Error:', error.message);
+    console.error('Internal Transak Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

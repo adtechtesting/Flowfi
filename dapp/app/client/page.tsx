@@ -154,6 +154,7 @@ function ClientDashboardContent() {
     jobTitle: "",
     amount: "",
     freelancerWallet: "",
+    durationDays: 30,
   });
 
   const handleCreateJob = async (e: React.FormEvent) => {
@@ -182,6 +183,7 @@ function ClientDashboardContent() {
           amount: Math.round(amountUsd * 100),
           clientWallet: publicKey!.toString(),
           freelancerWallet: formData.freelancerWallet,
+          durationDays: formData.durationDays,
         }),
       });
 
@@ -248,7 +250,7 @@ function ClientDashboardContent() {
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/10 pb-8">
             <div>
-              <h1 className="text-5xl font-light text-white tracking-tight mb-4">
+              <h1 className="text-3xl font-light text-white tracking-tight mb-4">
                 Client Dashboard
               </h1>
               <p className="text-white/50 text-lg font-light leading-relaxed max-w-xl">
@@ -302,7 +304,7 @@ function ClientDashboardContent() {
                   <Plus className="h-5 w-5" strokeWidth={1.5} />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-light text-white tracking-tight">
+                  <h2 className="text-xl font-light text-white tracking-tight">
                     Start a New Project
                   </h2>
                   <p className="text-sm text-white/40 font-light mt-1">Deploy capital securely into a new smart contract.</p>
@@ -361,6 +363,25 @@ function ClientDashboardContent() {
                       setFormData({ ...formData, freelancerWallet: e.target.value })
                     }
                   />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-[10px] font-medium tracking-widest text-white/40 uppercase">
+                    Payment Release Schedule (Auto-Approval)
+                  </label>
+                  <select
+                    className="w-full bg-white/[0.02] border border-white/10 px-5 py-3.5 rounded-xl text-white focus:outline-none focus:border-white/30 focus:bg-white/[0.04] transition-all font-light appearance-none"
+                    value={formData.durationDays}
+                    onChange={e => setFormData({ ...formData, durationDays: parseInt(e.target.value) })}
+                  >
+                    <option value={7} className="bg-zinc-900">7 Days (Fast-track)</option>
+                    <option value={14} className="bg-zinc-900">14 Days (Standard)</option>
+                    <option value={30} className="bg-zinc-900">30 Days (Monthly)</option>
+                    <option value={60} className="bg-zinc-900">60 Days (Enterprise)</option>
+                  </select>
+                  <p className="text-[10px] text-white/30 mt-2 font-light">
+                    Funds will automatically release to the freelancer after this period if no dispute is raised.
+                  </p>
                 </div>
 
                 <button
@@ -450,7 +471,7 @@ function ClientDashboardContent() {
 
                       <div className="flex-1 w-full">
                         <div className="flex items-center gap-4 mb-4">
-                          <h2 className="text-2xl font-light text-white tracking-tight">{job.jobTitle}</h2>
+                          <h2 className="text-xl font-light text-white tracking-tight">{job.jobTitle}</h2>
                           <span className="text-[9px] px-2 py-0.5 bg-white/5 text-white/50 uppercase tracking-widest border border-white/10 rounded-sm">
                             {onChainStatus.replace(/_/g, ' ')}
                           </span>
@@ -469,6 +490,15 @@ function ClientDashboardContent() {
                             <p className="text-[9px] text-white/40 uppercase tracking-[0.2em] mb-1.5">Freelancer</p>
                             <p className="text-white/50 font-mono text-sm mt-0.5">{job.freelancerWallet.slice(0, 4)}...{job.freelancerWallet.slice(-4)}</p>
                           </div>
+                          {job.scheduledReleaseAt && (
+                            <div>
+                              <p className="text-[9px] text-amber-500/60 uppercase tracking-[0.2em] mb-1.5">Auto-Release Date</p>
+                              <p className="text-amber-500/90 font-light flex items-center gap-1.5">
+                                <Clock className="w-3 h-3" />
+                                {new Date(job.scheduledReleaseAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -506,7 +536,7 @@ function ClientDashboardContent() {
                             {approvingId === job.id ? <><Loader2 className="h-4 w-4 animate-spin" /> Approving...</> : "Approve & Release"}
                           </button>
                         )}
-                        
+
                         {(job.status === "RELEASED" || job.status === "COMPLETED") && (
                           <div className="w-full md:w-48 text-sm px-6 py-3.5 bg-white/5 text-white/70 font-light flex items-center justify-center gap-2 border border-white/10 rounded-lg">
                             <CheckCircle className="h-4 w-4 text-white/50" /> Fully Released

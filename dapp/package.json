@@ -22,6 +22,7 @@
   "private": true,
   "dependencies": {
     "@coral-xyz/anchor": "^0.32.1",
+    "@moonpay/moonpay-js": "^0.7.6",
     "@prisma/adapter-pg": "^7.7.0",
     "@prisma/client": "^7.7.0",
     "@solana/client": "^1.2.0",

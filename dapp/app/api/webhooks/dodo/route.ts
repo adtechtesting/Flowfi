@@ -96,9 +96,17 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Automated funding failed" }, { status: 500 });
   }
 
+  const releaseDate = new Date();
+  releaseDate.setDate(releaseDate.getDate() + invoice.durationDays);
+
   await prisma.invoice.update({
     where: { id: invoice.id },
-    data: { status: "ESCROW_FUNDED", webhookProcessed: true, txSignature: txSig },
+    data: { 
+      status: "ESCROW_FUNDED", 
+      webhookProcessed: true, 
+      txSignature: txSig,
+      scheduledReleaseAt: releaseDate
+    },
   });
 
   return NextResponse.json({ success: true, txSig });

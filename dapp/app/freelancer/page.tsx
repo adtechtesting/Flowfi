@@ -121,7 +121,7 @@ export default function FreelancerDashboard() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          amount: usdcBalance,
+          amount: usdcAmount,
           walletAddress: publicKey.toString()
         })
       });
@@ -129,27 +129,25 @@ export default function FreelancerDashboard() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to generate Transak session. Did you add TRANSAK_ACCESS_TOKEN to .env?');
+        throw new Error(data.error || 'Failed to create withdrawal session.');
       }
 
       const transakConfig: TransakConfig = {
         widgetUrl: data.widgetUrl,
-        widgetHeight: "650px",
-        widgetWidth: "500px",
+        widgetHeight: "700px",
+        widgetWidth: "450px",
       };
 
       const transak = new Transak(transakConfig);
-
       transak.init();
 
-      Transak.on(Transak.EVENTS.TRANSAK_ORDER_SUCCESSFUL, (data: any) => {
-        console.log("Withdrawal successful:", data);
+      Transak.on(Transak.EVENTS.TRANSAK_ORDER_SUCCESSFUL, (orderData: any) => {
+        console.log("Withdrawal successful:", orderData);
         transak.close();
         setTimeout(() => loadWalletBalance(), 5000);
       });
 
       Transak.on(Transak.EVENTS.TRANSAK_WIDGET_CLOSE, () => {
-        console.log("Transak widget closed by user");
         transak.close();
         setTimeout(() => loadWalletBalance(), 1000);
       });
@@ -187,7 +185,7 @@ export default function FreelancerDashboard() {
 
           {/* Page Title */}
           <div>
-            <h1 className="text-5xl font-light text-white tracking-tight mb-4">Freelancer Hub</h1>
+            <h1 className="text-3xl font-light text-white tracking-tight mb-4">Freelancer Hub</h1>
             <p className="text-white/50 text-lg font-light leading-relaxed max-w-xl">
               Access your earnings immediately. Withdraw up to 85% of your pay the moment a client secures funds on the network.
             </p>
@@ -201,10 +199,10 @@ export default function FreelancerDashboard() {
             <div className="absolute -top-[1px] -right-[1px] h-[3px] w-[3px] bg-white/20 group-hover:bg-white transition-colors"></div>
 
             <div className="flex-1 w-full lg:w-auto">
-              <p className="text-[10px] text-white/40 uppercase tracking-[0.2em] mb-4">Total Available to Withdraw</p>
+              <p className="text-[9px] text-white/40 uppercase tracking-[0.2em] mb-4">Total Available to Withdraw</p>
               <div className="flex items-baseline gap-4 mb-6 lg:mb-0">
-                <span className="text-6xl font-light text-white tracking-tight">{usdcBalance.toFixed(2)}</span>
-                <span className="text-2xl text-white/30 font-light tracking-wide">USDC</span>
+                <span className="text-4xl font-light text-white tracking-tight">{usdcBalance.toFixed(2)}</span>
+                <span className="text-xl text-white/30 font-light tracking-wide">USDC</span>
               </div>
             </div>
 
@@ -236,7 +234,7 @@ export default function FreelancerDashboard() {
           </div>
 
           <div className="border-t border-white/10 pt-10">
-            <h2 className="text-3xl font-light text-white tracking-tight mb-8 flex items-center gap-4">
+            <h2 className="text-2xl font-light text-white tracking-tight mb-8 flex items-center gap-4">
               <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
               Active Projects
             </h2>
@@ -301,7 +299,7 @@ export default function FreelancerDashboard() {
 
                     <div className="flex-1 w-full">
                       <div className="flex items-center gap-4 mb-4">
-                        <h2 className="text-2xl font-light text-white tracking-tight">{job.jobTitle}</h2>
+                        <h2 className="text-xl font-light text-white tracking-tight">{job.jobTitle}</h2>
                         {isAdvanced && <span className="text-[9px] px-2 py-0.5 bg-white/5 text-white/50 uppercase tracking-widest border border-white/10 rounded-sm">Advance Withdrawn</span>}
                       </div>
 
@@ -318,6 +316,15 @@ export default function FreelancerDashboard() {
                           <p className="text-[9px] text-white/40 uppercase tracking-[0.2em] mb-1.5">Final Release</p>
                           <p className="text-white/50 font-light">${remainingUsdc} USDC</p>
                         </div>
+                        {job.scheduledReleaseAt && (
+                          <div>
+                            <p className="text-[9px] text-amber-500/60 uppercase tracking-[0.2em] mb-1.5">Auto-Release Date</p>
+                            <p className="text-amber-500/90 font-light flex items-center gap-1.5 mt-1">
+                              <Clock className="w-3 h-3" />
+                              {new Date(job.scheduledReleaseAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
 

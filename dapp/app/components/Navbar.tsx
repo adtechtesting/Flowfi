@@ -15,103 +15,91 @@ export function Navbar() {
     <motion.nav
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="absolute top-0 left-0 right-0 z-50 px-6 py-6 bg-transparent border-none selection:bg-white/20 selection:text-white font-sans"
+      className="fixed top-8 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-5xl"
     >
-      <div className="mx-auto flex max-w-6xl items-center justify-between">
-        <div className="flex items-center gap-10">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="text-2xl font-light tracking-tight text-white hover:text-white/80 transition-colors">
-              FlowFi
-            </span>
-          </Link>
-
-          <div className="hidden items-center gap-2 md:flex">
-            <Link
-              href="/freelancer"
-              className="text-sm font-light text-white/60 tracking-wide transition-all hover:text-white hover:bg-white/5 px-4 py-2"
-              style={{ borderRadius: '2px' }}
-            >
-              Get Paid
-            </Link>
-            <Link
-              href="/client"
-              className="text-sm font-light text-white/60 tracking-wide transition-all hover:text-white hover:bg-white/5 px-4 py-2"
-              style={{ borderRadius: '2px' }}
-            >
-              Hire Talent
-            </Link>
-            <Link
-              href="/profile"
-              className="text-sm font-light text-white/60 tracking-wide transition-all hover:text-white hover:bg-white/5 px-4 py-2"
-              style={{ borderRadius: '2px' }}
-            >
-              Profile
-            </Link> <Link
-              href="/how-it-works"
-              className="text-sm font-light text-white/60 tracking-wide transition-all hover:text-white hover:bg-white/5 px-4 py-2"
-              style={{ borderRadius: '2px' }}
-            >
-              How it works
-            </Link>
+      <div className="liquid-glass-strong glow-ring noise px-8 py-3 rounded-2xl flex items-center justify-between border border-white/10 shadow-2xl">
+        {/* Brand */}
+        <Link href="/" className="flex items-center gap-2 group">
+          <div className="h-6 w-6 bg-white rounded-lg flex items-center justify-center rotate-3 group-hover:rotate-0 transition-transform duration-500 shadow-[0_0_15px_rgba(255,255,255,0.2)]">
+            <div className="w-2 h-2 bg-black rounded-full" />
           </div>
+          <span className="text-xl tracking-tighter text-white">
+            <span className="font-bold">Flow</span>
+            <span className="font-extralight text-white/70">Fi</span>
+          </span>
+        </Link>
+
+        {/* Links */}
+        <div className="hidden md:flex items-center gap-10">
+          {[
+            { name: "Get Paid", href: "/freelancer" },
+            { name: "Hire Talent", href: "/client" },
+            { name: "Profile", href: "/profile" },
+            { name: "How it works", href: "/#how-it-works" },
+          ].map((link) => (
+            <Link
+              key={link.name}
+              href={link.href}
+              className="text-[10px] font-medium text-white/50 tracking-[0.2em] uppercase transition-all hover:text-white hover:drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]"
+            >
+              {link.name}
+            </Link>
+          ))}
         </div>
 
-        <div className="flex items-center gap-4 relative">
+        {/* Wallet Section */}
+        <div className="flex items-center gap-4">
           {connected ? (
-            <div className="flex items-center gap-3">
-              <div
-                className="hidden sm:flex items-center gap-2 px-4 py-2 bg-white/[0.03] border border-white/10 backdrop-blur-md"
-                style={{ borderRadius: '2px' }}
-              >
-                <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]"></div>
-                <span className="text-xs font-mono text-white/80 tracking-widest">
+            <div className="flex items-center gap-2 bg-white/5 border border-white/10 pl-3 pr-1 py-1 rounded-xl">
+              <div className="flex items-center gap-2">
+                <div className="w-1 h-1 rounded-full bg-green-500 animate-pulse" />
+                <span className="text-[10px] font-mono text-white/60 tracking-wider">
                   {address?.slice(0, 4)}...{address?.slice(-4)}
                 </span>
               </div>
               <button
                 onClick={() => disconnect()}
-                className="bg-transparent border border-white/20 px-5 py-2 text-sm font-light text-white transition-all hover:bg-white/10 hover:border-white/30 backdrop-blur-md tracking-wide"
-                style={{ borderRadius: '2px' }}
+                className="ml-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-[9px] font-bold text-white uppercase tracking-widest rounded-lg transition-all"
               >
-                Disconnect
+                Exit
               </button>
             </div>
           ) : (
-            <div className="relative flex flex-col items-end">
+            <div className="relative">
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-black bg-white hover:bg-white/90 transition-all shadow-[0_0_15px_rgba(255,255,255,0.05)] hover:shadow-[0_0_25px_rgba(255,255,255,0.15)] tracking-wide"
-                style={{ borderRadius: '2px' }}
+                className="flex items-center gap-2 px-6 py-2.5 bg-white hover:bg-white/90 text-black text-[11px] font-bold uppercase tracking-widest rounded-xl transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] group"
               >
-                <Wallet className="h-4 w-4" />
+                <Wallet className="h-3.5 w-3.5 group-hover:scale-110 transition-transform" />
                 Connect Wallet
               </button>
 
               {dropdownOpen && (
                 <motion.div
-                  initial={{ opacity: 0, y: -5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="absolute right-0 top-full mt-3 w-56 border border-white/10 bg-[#0a0a0a]/95 backdrop-blur-xl p-2 shadow-2xl z-50"
-                  style={{ borderRadius: '2px' }}
+                  initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  className="absolute right-0 top-full mt-4 w-52 liquid-glass-strong glow-ring noise border border-white/10 p-2 rounded-2xl shadow-2xl z-50 overflow-hidden"
                 >
+                  <div className="px-3 py-2 border-b border-white/5 mb-2">
+                    <p className="text-[8px] font-bold text-white/30 uppercase tracking-[0.2em]">Select Provider</p>
+                  </div>
                   {wallets && wallets.length > 0 ? (
                     wallets.map((w) => (
                       <button
                         key={w.adapter.name}
                         onClick={() => { select(w.adapter.name); setDropdownOpen(false); }}
-                        className="flex w-full items-center gap-3 px-3 py-3 text-sm text-white/60 transition-all hover:bg-white/5 hover:text-white font-light tracking-wide"
-                        style={{ borderRadius: '2px' }}
+                        className="flex w-full items-center gap-3 px-3 py-2.5 text-[10px] text-white/50 transition-all hover:bg-white/5 hover:text-white rounded-xl group"
                       >
                         <img
                           src={w.adapter.icon}
                           alt={w.adapter.name}
-                          className="w-4 h-4 opacity-80"
+                          className="w-4 h-4 grayscale group-hover:grayscale-0 transition-all"
                         />
-                        {w.adapter.name}
+                        <span className="font-medium tracking-wide">{w.adapter.name}</span>
                       </button>
                     ))
                   ) : (
-                    <div className="px-3 py-4 text-sm text-center text-white/40 font-light tracking-wide">
+                    <div className="px-3 py-4 text-[10px] text-center text-white/30 italic">
                       No wallets detected.
                     </div>
                   )}
