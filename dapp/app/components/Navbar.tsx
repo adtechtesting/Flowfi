@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { Wallet } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 
 export function Navbar() {
@@ -17,12 +17,11 @@ export function Navbar() {
       animate={{ y: 0, opacity: 1 }}
       className="fixed top-8 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-5xl"
     >
-      <div className="liquid-glass-strong glow-ring noise px-8 py-3 rounded-2xl flex items-center justify-between border border-white/10 shadow-2xl">
+      {/* Main Navbar Bar */}
+      <div className="relative liquid-glass-strong glow-ring noise px-8 h-16 rounded-2xl flex items-center justify-between border border-white/10 shadow-2xl">
         {/* Brand */}
         <Link href="/" className="flex items-center gap-2 group">
-          <div className="h-6 w-6 bg-white rounded-lg flex items-center justify-center rotate-3 group-hover:rotate-0 transition-transform duration-500 shadow-[0_0_15px_rgba(255,255,255,0.2)]">
-            <div className="w-2 h-2 bg-black rounded-full" />
-          </div>
+
           <span className="text-xl tracking-tighter text-white">
             <span className="font-bold">Flow</span>
             <span className="font-extralight text-white/70">Fi</span>
@@ -35,7 +34,7 @@ export function Navbar() {
             { name: "Get Paid", href: "/freelancer" },
             { name: "Hire Talent", href: "/client" },
             { name: "Profile", href: "/profile" },
-            { name: "How it works", href: "/#how-it-works" },
+            { name: "How it works", href: "/how-it-works" },
           ].map((link) => (
             <Link
               key={link.name}
@@ -47,12 +46,12 @@ export function Navbar() {
           ))}
         </div>
 
-        {/* Wallet Section */}
+        {/* Wallet Button */}
         <div className="flex items-center gap-4">
           {connected ? (
             <div className="flex items-center gap-2 bg-white/5 border border-white/10 pl-3 pr-1 py-1 rounded-xl">
               <div className="flex items-center gap-2">
-                <div className="w-1 h-1 rounded-full bg-green-500 animate-pulse" />
+                <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="text-[10px] font-mono text-white/60 tracking-wider">
                   {address?.slice(0, 4)}...{address?.slice(-4)}
                 </span>
@@ -68,43 +67,48 @@ export function Navbar() {
             <div className="relative">
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="flex items-center gap-2 px-6 py-2.5 bg-white hover:bg-white/90 text-black text-[11px] font-bold uppercase tracking-widest rounded-xl transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] group"
+                className="flex items-center gap-2 px-6 h-10 bg-white hover:bg-white/90 text-black text-[11px] font-bold uppercase tracking-widest rounded-xl transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] group"
               >
                 <Wallet className="h-3.5 w-3.5 group-hover:scale-110 transition-transform" />
                 Connect Wallet
               </button>
 
-              {dropdownOpen && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  className="absolute right-0 top-full mt-4 w-52 liquid-glass-strong glow-ring noise border border-white/10 p-2 rounded-2xl shadow-2xl z-50 overflow-hidden"
-                >
-                  <div className="px-3 py-2 border-b border-white/5 mb-2">
-                    <p className="text-[8px] font-bold text-white/30 uppercase tracking-[0.2em]">Select Provider</p>
-                  </div>
-                  {wallets && wallets.length > 0 ? (
-                    wallets.map((w) => (
-                      <button
-                        key={w.adapter.name}
-                        onClick={() => { select(w.adapter.name); setDropdownOpen(false); }}
-                        className="flex w-full items-center gap-3 px-3 py-2.5 text-[10px] text-white/50 transition-all hover:bg-white/5 hover:text-white rounded-xl group"
-                      >
-                        <img
-                          src={w.adapter.icon}
-                          alt={w.adapter.name}
-                          className="w-4 h-4 grayscale group-hover:grayscale-0 transition-all"
-                        />
-                        <span className="font-medium tracking-wide">{w.adapter.name}</span>
-                      </button>
-                    ))
-                  ) : (
-                    <div className="px-3 py-4 text-[10px] text-center text-white/30 italic">
-                      No wallets detected.
+              {/* Floating Dropdown - Adjusted margin (mt-6) so it cleanly clears the bottom of the navbar */}
+              <AnimatePresence>
+                {dropdownOpen && !connected && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
+                    className="absolute right-0 top-full mt-6 w-52 bg-black/60 backdrop-blur-xl border border-white/10 p-2 rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.5)] z-[60] overflow-hidden"
+                  >
+                    <div className="px-3 py-2 border-b border-white/5 mb-2">
+                      <p className="text-[8px] font-bold text-white/40 uppercase tracking-[0.2em]">Select Provider</p>
                     </div>
-                  )}
-                </motion.div>
-              )}
+                    {wallets && wallets.length > 0 ? (
+                      wallets.map((w) => (
+                        <button
+                          key={w.adapter.name}
+                          onClick={() => { select(w.adapter.name); setDropdownOpen(false); }}
+                          className="flex w-full items-center gap-3 px-3 py-2.5 text-[11px] text-zinc-400 transition-all hover:bg-white/10 hover:text-white rounded-xl group"
+                        >
+                          <img
+                            src={w.adapter.icon}
+                            alt={w.adapter.name}
+                            className="w-5 h-5 grayscale group-hover:grayscale-0 transition-all opacity-80 group-hover:opacity-100"
+                          />
+                          <span className="font-medium tracking-wide">{w.adapter.name}</span>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="px-3 py-4 text-[10px] text-center text-white/30 italic">
+                        No wallets detected.
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           )}
         </div>

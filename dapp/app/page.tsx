@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { ArrowRight, ShieldCheck, Zap, Globe, Coins } from "lucide-react";
+import { Spotlight } from "./components/ui/spotlight-new";
 
 interface AnimatedHeadingProps {
   text: string;
@@ -125,7 +126,7 @@ export default function LandingPage() {
 
   return (
     <div className="bg-black min-h-screen w-full flex flex-col font-sans selection:bg-white/20 selection:text-white">
-
+      <Spotlight></Spotlight>
       <div className="relative min-h-[100svh] w-full overflow-hidden flex flex-col justify-center bg-black border-b border-white/5">
         <video
           autoPlay
@@ -145,7 +146,7 @@ export default function LandingPage() {
             <div className="flex flex-col items-center w-full">
               <div className="flex flex-col leading-[1.05] mb-8">
                 <AnimatedHeading
-                  text={"Get paid sooner.\nNot weeks later."}
+                  text={"You already did the work.\nGet paid today."}
                   className="text-4xl md:text-5xl lg:text-6xl font-normal text-white tracking-tightest whitespace-pre-wrap drop-shadow-2xl"
                   delay={200}
                   charDelay={30}
@@ -153,14 +154,15 @@ export default function LandingPage() {
 
                 <FadeIn delay={1200} duration={800}>
                   <h2 className="text-xl md:text-2xl font-light text-white/70 tracking-tight mt-6">
-                    Freelancers don’t struggle to earn.<br className="hidden md:block" /> They struggle to <span className="text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">access what they’ve already earned.</span>
+                    FlowFi locks your client’s payment the moment they pay.<br className="hidden md:block" />
+                    You access <span className="text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">85% instantly</span> — not in 30 days.
                   </h2>
                 </FadeIn>
               </div>
 
               <FadeIn delay={1600} duration={1000}>
                 <p className="max-w-2xl text-base md:text-xl text-gray-400 font-light mb-10 leading-relaxed tracking-wide mx-auto">
-                  FlowFi fixes that.
+                  FlowFi is not a payment processor — it’s an escrow-backed liquidity layer that lets freelancers unlock earnings early.
                 </p>
               </FadeIn>
 
@@ -180,7 +182,7 @@ export default function LandingPage() {
                     Create a Job
                   </Link>
                 </div>
-                
+
                 <div className="mt-12 flex flex-col md:flex-row items-center justify-center gap-3 md:gap-8 text-sm text-gray-400 font-medium tracking-wider uppercase text-balance border-t border-white/10 pt-6">
                   <span className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.6)]"></span>
@@ -218,8 +220,8 @@ export default function LandingPage() {
         <div className="absolute inset-0 bg-grid opacity-30" />
         <div className="relative max-w-6xl mx-auto">
           <SectionHeading eyebrow="01 — The Problem" className="text-3xl md:text-5xl lg:text-6xl font-normal max-w-4xl tracking-tightest">
-            Waiting to get paid is <br className="hidden md:block" />
-            <span className="gradient-text">the real problem.</span>
+            You finished. <br className="hidden md:block" />
+            <span className="gradient-text">The money didn’t.</span>
           </SectionHeading>
 
           <div className="mt-20">
@@ -227,7 +229,7 @@ export default function LandingPage() {
               <div className="liquid-glass-strong glow-ring rounded-[2rem] p-8 md:p-12 noise relative flex flex-col md:flex-row gap-12 items-center">
                 <div className="absolute -top-[1px] -left-[1px] h-[3px] w-[3px] bg-white/20"></div>
                 <div className="absolute -bottom-[1px] -right-[1px] h-[3px] w-[3px] bg-white/20"></div>
-                
+
                 <div className="flex-1">
                   <div className="inline-flex items-center gap-2 px-3 py-1 bg-red-500/10 border border-red-500/20 rounded-full mb-6">
                     <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
@@ -238,11 +240,11 @@ export default function LandingPage() {
                   </h3>
                   <ul className="text-base text-gray-400 leading-relaxed font-light space-y-3 mb-6">
                     <li className="flex items-start gap-3"><span className="text-white/20 mt-1">•</span> Freelancers wait 30–60 days after finishing work</li>
-                    <li className="flex items-start gap-3"><span className="text-white/20 mt-1">•</span> Cross-border payments are slow and expensive</li>
-                    <li className="flex items-start gap-3"><span className="text-white/20 mt-1">•</span> Small teams deal with constant cash flow pressure</li>
+                    <li className="flex items-start gap-3"><span className="text-white/20 mt-1">•</span> Not because the client is slow — but because of old banking</li>
+                    <li className="flex items-start gap-3"><span className="text-white/20 mt-1">•</span> FlowFi makes that delay unnecessary</li>
                   </ul>
                   <p className="text-base text-gray-400 leading-relaxed font-light">
-                    Even when a client is ready to pay, the money doesn’t arrive when it’s actually needed. That delay isn’t just inconvenient — it slows people down.
+                    You delivered the project. The client is happy. The invoice is sent. And now you wait. FlowFi ensures your money matches your work.
                   </p>
                 </div>
 
@@ -261,11 +263,12 @@ export default function LandingPage() {
             </Reveal>
           </div>
 
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
-              { value: "30-90", label: "Days waiting for payments" },
-              { value: "$0", label: "Hidden wiring fees" },
-              { value: "100%", label: "Control of your cash flow" },
+              { value: "45d", label: "Avg. Cross-border wait" },
+              { value: "73%", label: "Cash flow struggle" },
+              { value: "$50+", label: "Lost in fees" },
+              { value: "85%", label: "Available Instantly" },
             ].map((s, i) => (
               <Reveal key={s.label} delay={i * 100} className="h-full">
                 <div className="liquid-glass-strong glow-ring rounded-[2rem] p-8 md:p-10 noise relative h-full flex flex-col justify-center transition-transform hover:-translate-y-1 duration-500">
@@ -274,7 +277,7 @@ export default function LandingPage() {
                   <div className="text-3xl md:text-4xl font-light mb-4 tracking-tightest text-white drop-shadow-md">
                     {s.value}
                   </div>
-                  <div className="text-xs text-gray-400 font-medium tracking-widest uppercase">{s.label}</div>
+                  <div className="text-[10px] text-gray-400 font-medium tracking-widest uppercase">{s.label}</div>
                 </div>
               </Reveal>
             ))}
@@ -297,7 +300,7 @@ export default function LandingPage() {
             </SectionHeading>
             <Reveal delay={150}>
               <p className="max-w-sm text-gray-400 leading-relaxed font-light">
-                FlowFi lets freelancers access their earnings early — instead of waiting weeks. It’s not a marketplace. It’s a payment layer for freelancers and clients who already work together.
+                Not a marketplace. Built for existing relationships. FlowFi is a payment layer for people who already trust their clients.
               </p>
             </Reveal>
           </div>
@@ -350,10 +353,10 @@ export default function LandingPage() {
 
             <div className="grid md:grid-cols-4 gap-6">
               {[
-                { n: "01", title: "Client Pays", body: "Client pays using normal methods (cards, bank, etc.) via Dodo Payments." },
-                { n: "02", title: "Funds Secured", body: "The payment is locked safely and reserved for you on the network." },
-                { n: "03", title: "Get Paid Early", body: "You can instantly access most of your earnings — no waiting." },
-                { n: "04", title: "Final Settlement", body: "The remaining amount is released after completion of the work." }
+                { n: "01", title: "Client Pays", body: "Pays via card, UPI, or bank transfer via Dodo Payments." },
+                { n: "02", title: "Money Locks", body: "Converts to USDC and locks in a Solana smart contract." },
+                { n: "03", title: "You Get 85%", body: "Withdraw instantly — no approval needed from client." },
+                { n: "04", title: "Work Completes", body: "Remaining 15% released. Withdraw to bank in 1–2 hours." }
               ].map((s, i) => (
                 <Reveal key={s.n} delay={i * 120} className="h-full">
                   <div className="relative h-full flex flex-col items-center text-center">
@@ -387,15 +390,19 @@ export default function LandingPage() {
               <div className="liquid-glass-strong glow-ring rounded-[2rem] p-10 h-full flex flex-col noise relative transition-transform hover:-translate-y-1 duration-500">
                 <div className="absolute -top-[1px] -left-[1px] h-[3px] w-[3px] bg-white/20"></div>
                 <div className="absolute -bottom-[1px] -right-[1px] h-[3px] w-[3px] bg-white/20"></div>
-                <div className="text-sm tracking-[0.3em] uppercase text-gray-500 mb-8 font-medium">For Freelancers</div>
+                <div className="text-sm tracking-[0.3em] uppercase text-gray-500 mb-8 font-medium">Who it’s for</div>
                 <ul className="space-y-6 text-gray-300 font-light text-lg">
                   <li className="flex items-start gap-4">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 mt-2 shadow-[0_0_10px_rgba(16,185,129,0.5)] shrink-0" />
-                    <span>No more waiting weeks to access earnings</span>
+                    <span>Freelancers who want to get paid faster</span>
                   </li>
                   <li className="flex items-start gap-4">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 mt-2 shadow-[0_0_10px_rgba(16,185,129,0.5)] shrink-0" />
-                    <span>Better cash flow from day one</span>
+                    <span>Agencies managing constant cash flow</span>
+                  </li>
+                  <li className="flex items-start gap-4">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 mt-2 shadow-[0_0_10px_rgba(16,185,129,0.5)] shrink-0" />
+                    <span>Consultants tired of payment delays</span>
                   </li>
                 </ul>
               </div>
@@ -405,15 +412,15 @@ export default function LandingPage() {
               <div className="liquid-glass-strong glow-ring rounded-[2rem] p-10 h-full flex flex-col noise relative transition-transform hover:-translate-y-1 duration-500">
                 <div className="absolute -top-[1px] -left-[1px] h-[3px] w-[3px] bg-white/20"></div>
                 <div className="absolute -bottom-[1px] -right-[1px] h-[3px] w-[3px] bg-white/20"></div>
-                <div className="text-sm tracking-[0.3em] uppercase text-gray-500 mb-8 font-medium">For Clients</div>
+                <div className="text-sm tracking-[0.3em] uppercase text-gray-500 mb-8 font-medium">Guarantees</div>
                 <ul className="space-y-6 text-gray-300 font-light text-lg">
                   <li className="flex items-start gap-4">
                     <span className="w-2 h-2 rounded-full bg-blue-500 mt-2 shadow-[0_0_10px_rgba(59,130,246,0.5)] shrink-0" />
-                    <span>Payment is controlled and only fully released after completion</span>
+                    <span>Payments are secured on-chain upfront</span>
                   </li>
                   <li className="flex items-start gap-4">
                     <span className="w-2 h-2 rounded-full bg-blue-500 mt-2 shadow-[0_0_10px_rgba(59,130,246,0.5)] shrink-0" />
-                    <span>Clear, verifiable transaction flow</span>
+                    <span>No Chargebacks. No Reversals.</span>
                   </li>
                 </ul>
               </div>
@@ -499,20 +506,22 @@ export default function LandingPage() {
           </div>
 
           <div className="max-w-xl text-left md:text-right">
-            <SectionHeading eyebrow="06 — Real-world payouts" className="text-3xl md:text-5xl font-normal tracking-tightest mb-8">
-              Designed for <br />
-              <span className="gradient-text">actual usage.</span>
+            <SectionHeading eyebrow="06 — Withdrawals" className="text-3xl md:text-5xl font-normal tracking-tightest mb-8">
+              You don’t need to <br />
+              <span className="gradient-text">understand crypto.</span>
             </SectionHeading>
             <Reveal delay={300}>
               <p className="text-gray-400 text-lg md:text-xl font-light tracking-wide leading-relaxed">
-                Not just on-chain activity. Freelancers can withdraw their earnings directly to their bank accounts through providers like Transak.
+                Withdraw to your bank in 1–2 hours. Works globally across India (INR), EU (EUR), Africa, and more.
                 <br /><br />
-                <span className="text-gray-200">No need to understand crypto. Just get paid.</span>
+                <span className="text-gray-200">Real-world bank payouts. Powered by Transak.</span>
               </p>
             </Reveal>
           </div>
         </div>
       </section>
+
+
 
 
       <section id="faq" className="relative bg-black text-white py-32 px-6 md:px-12 lg:px-16 border-t border-white/5">
@@ -532,7 +541,12 @@ export default function LandingPage() {
                       className="w-full flex items-center justify-between gap-6 px-6 md:px-8 py-6 text-left relative z-20"
                     >
                       <span className="text-lg md:text-xl font-light tracking-tight text-gray-200 group-hover:text-white transition-colors">
-                        {f.q}
+                        {[
+                          "Do clients need crypto?",
+                          "Is payment guaranteed?",
+                          "What about disputes?",
+                          "How do I withdraw?"
+                        ][i]}
                       </span>
                       <span className={`shrink-0 w-8 h-8 rounded-full border border-white/20 flex items-center justify-center transition-transform duration-300 text-gray-400 group-hover:border-white/40 group-hover:text-white ${isOpen ? "rotate-45" : ""}`}>
                         +
@@ -541,7 +555,12 @@ export default function LandingPage() {
                     <div className="grid transition-all duration-500 ease-out relative z-20" style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}>
                       <div className="overflow-hidden">
                         <p className="px-6 md:px-8 pb-6 text-gray-400 leading-relaxed max-w-2xl font-light">
-                          {f.a}
+                          {[
+                            "No. Clients can pay using cards or bank transfers. They use familiar methods while the network handles the security in the background.",
+                            "Yes — funds are secured in a Solana smart contract the moment the client pays.",
+                            "15% stays locked in the contract until the work is finalized or resolved.",
+                            "Directly to your bank account via Transak. Usually arrives in 1–2 hours."
+                          ][i]}
                         </p>
                       </div>
                     </div>
@@ -569,8 +588,8 @@ export default function LandingPage() {
 
               <div className="text-xs uppercase tracking-[0.3em] text-gray-400 mb-8 font-medium">Ready to start?</div>
               <h2 className="text-3xl md:text-5xl lg:text-6xl font-light mb-8 tracking-tightest drop-shadow-xl">
-                Getting paid shouldn’t take longer <br className="hidden md:block" />
-                <span className="gradient-text font-normal">than doing the work.</span>
+                The work is done. <br className="hidden md:block" />
+                <span className="gradient-text font-normal">Get paid today.</span>
               </h2>
               <p className="text-xl md:text-2xl text-gray-400 max-w-2xl mx-auto mb-16 font-light tracking-wide leading-relaxed">
                 FlowFi makes sure it doesn’t.

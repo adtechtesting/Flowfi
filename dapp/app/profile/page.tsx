@@ -7,6 +7,7 @@ import {
     User, Briefcase, Coins, TrendingUp, Clock, CheckCircle,
     ExternalLink, Copy, Loader2, Zap, XCircle, AlertCircle,
 } from "lucide-react";
+import { Spotlight } from "../components/ui/spotlight-new";
 
 const explorerUrl = (sig: string) =>
     `https://explorer.solana.com/tx/${sig}?cluster=devnet`;
@@ -230,7 +231,9 @@ export default function ProfilePage() {
     if (!connected || !publicKey) {
         return (
             <div className="relative min-h-screen bg-black w-full flex items-center justify-center overflow-hidden font-sans selection:bg-white/20 selection:text-white">
+
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white/5 rounded-full blur-[120px] opacity-50 pointer-events-none" />
+
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                     className="relative z-10 p-12 liquid-glass-strong glow-ring noise rounded-3xl flex flex-col items-center text-center max-w-md w-full mx-4 group">
 
@@ -260,6 +263,7 @@ export default function ProfilePage() {
 
     return (
         <div className="relative min-h-screen bg-black w-full pt-32 pb-24 px-6 overflow-hidden font-sans selection:bg-white/20 selection:text-white">
+            <Spotlight></Spotlight>
             <div className="absolute top-0 left-1/3 w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-[150px] pointer-events-none opacity-50" />
             <div className="absolute bottom-0 right-1/3 w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-[150px] pointer-events-none opacity-40" />
 

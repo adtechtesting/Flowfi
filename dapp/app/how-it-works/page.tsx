@@ -6,6 +6,7 @@ import {
     ArrowRight, Shield, Globe, Clock, Coins
 } from "lucide-react";
 import Link from "next/link";
+import { Spotlight } from "../components/ui/spotlight-new";
 
 
 
@@ -22,6 +23,7 @@ function Step({
 }) {
     return (
         <div className="flex gap-6 group">
+            <Spotlight />
             {/* Left — number + line */}
             <div className="flex flex-col items-center">
                 <div className="w-12 h-12 liquid-glass-strong glow-ring noise rounded-2xl flex items-center justify-center shrink-0 z-10 relative">

@@ -46,6 +46,7 @@ export async function POST(req: Request) {
           quantity: 1,
           amount: Number(amount)
         }],
+        allowed_payment_method_types: ["credit", "debit", "crypto_currency", "upi_collect", "upi_intent", "apple_pay", "google_pay"] as any,
         return_url: returnUrl,
         metadata: {
           dodoInvoiceId,
