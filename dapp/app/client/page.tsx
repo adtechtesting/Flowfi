@@ -3,13 +3,23 @@
 import { useEffect, useState, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
-import { Plus, Briefcase, Loader2, Info, CheckCircle, ExternalLink, Zap, Clock, ShieldCheck } from "lucide-react";
+import { Plus, Briefcase, Loader2, Info, CheckCircle, ExternalLink, Zap, Clock, ShieldCheck, ArrowRight, Wallet } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { PublicKey } from "@solana/web3.js";
 import {
   buildInitializeEscrowTx,
   buildApproveMilestoneTx,
 } from "../lib/solana/client";
+import { getEscrowPda } from "../lib/solana/constants";
+
+interface PendingJob {
+  jobTitle: string;
+  amount: string;
+  freelancerWallet: string;
+  durationDays: number;
+  tempInvoiceId: string;
+  escrowPda: string;
+}
 
 function ClientDashboardContent() {
   const { publicKey, signTransaction, connected, sendTransaction } = useWallet();
@@ -43,6 +53,8 @@ function ClientDashboardContent() {
   };
 
   const [isCreating, setIsCreating] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [pendingJobData, setPendingJobData] = useState<PendingJob | null>(null);
   const [approvingId, setApprovingId] = useState<string | null>(null);
 
   const [editingJob, setEditingJob] = useState<any>(null);
@@ -157,39 +169,53 @@ function ClientDashboardContent() {
     durationDays: 30,
   });
 
-  const handleCreateJob = async (e: React.FormEvent) => {
+  const handlePreConfirm = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!publicKey || !signTransaction) return alert("Please connect your wallet first");
+    if (!publicKey) return alert("Please connect your wallet first");
 
-    let freelancerPubkey: PublicKey;
     try {
-      freelancerPubkey = new PublicKey(formData.freelancerWallet);
+      new PublicKey(formData.freelancerWallet);
     } catch {
       return alert("Invalid freelancer wallet address");
     }
 
-    const amountUsd = parseFloat(formData.amount);
-    if (isNaN(amountUsd) || amountUsd <= 0) {
-      return alert("Invalid amount");
-    }
+    const tempInvoiceId = "inv_" + Date.now().toString().slice(-10);
+    const [pda] = getEscrowPda(publicKey, tempInvoiceId);
 
+    setPendingJobData({
+      ...formData,
+      tempInvoiceId,
+      escrowPda: pda.toString(),
+    });
+    setShowConfirmModal(true);
+  };
+
+  const handleCreateJob = async () => {
+    if (!publicKey || !pendingJobData) return;
+    
     setIsCreating(true);
+    setShowConfirmModal(false);
+
     try {
+      const amountUsd = parseFloat(pendingJobData.amount);
+
       const res = await fetch("/api/create-invoice", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          jobTitle: formData.jobTitle,
+          jobTitle: pendingJobData.jobTitle,
           amount: Math.round(amountUsd * 100),
           clientWallet: publicKey!.toString(),
-          freelancerWallet: formData.freelancerWallet,
-          durationDays: formData.durationDays,
+          freelancerWallet: pendingJobData.freelancerWallet,
+          durationDays: pendingJobData.durationDays,
+          customInvoiceId: pendingJobData.tempInvoiceId, // Pass the pre-calculated ID
         }),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to secure project");
 
+      // AUTHORIZATION STEP: Sign the transaction to prove wallet ownership
       const walletAdapter = { publicKey: publicKey!, signTransaction: signTransaction! };
       const tx = await buildInitializeEscrowTx(
         connection,
@@ -197,12 +223,13 @@ function ClientDashboardContent() {
         data.dodoInvoiceId,
         amountUsd,
         publicKey!,
-        freelancerPubkey,
+        new PublicKey(pendingJobData.freelancerWallet),
         new PublicKey(data.authorityPubkey)
       );
 
       const txId = await sendTransaction(tx, connection);
 
+      // REDIRECT STEP: Go to Dodo after on-chain authorization
       window.location.href = data.paymentUrl;
 
     } catch (err: any) {
@@ -292,148 +319,159 @@ function ClientDashboardContent() {
             </motion.div>
           )}
 
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-5">
-
-            {/* Create job form */}
-            <div className="relative lg:col-span-3 p-8 md:p-10 liquid-glass-strong glow-ring noise rounded-[2rem] transition-all duration-500">
-              <div className="absolute -top-[1px] -left-[1px] h-[3px] w-[3px] bg-white/20"></div>
-              <div className="absolute -bottom-[1px] -right-[1px] h-[3px] w-[3px] bg-white/20"></div>
-
-              <div className="mb-10 flex items-center gap-4 border-b border-white/5 pb-6">
-                <div className="flex h-12 w-12 items-center justify-center bg-white/5 border border-white/10 rounded-2xl text-white">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+            {/* Form Section */}
+            <div className="lg:col-span-7 bg-zinc-900/40 border border-white/10 rounded-3xl p-6 md:p-8 flex flex-col justify-between shadow-2xl backdrop-blur-md">
+              <div className="flex items-center gap-4 mb-8">
+                <div className="flex h-10 w-10 items-center justify-center bg-white/5 border border-white/10 rounded-xl text-white">
                   <Plus className="h-5 w-5" strokeWidth={1.5} />
                 </div>
                 <div>
-                  <h2 className="text-xl font-light text-white tracking-tight">
+                  <h2 className="text-lg font-light text-white tracking-tight leading-none">
                     Start a New Project
                   </h2>
-                  <p className="text-sm text-white/40 font-light mt-1">Deploy capital securely into a new smart contract.</p>
+                  <p className="text-[11px] text-white/30 font-light mt-1.5 tracking-tight uppercase tracking-[0.05em]">Secure your next collaboration on-chain</p>
                 </div>
               </div>
 
-              <form onSubmit={handleCreateJob} className="flex flex-col gap-6">
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="mb-2 block text-[10px] font-medium tracking-widest text-white/40 uppercase">
-                      Project Name
-                    </label>
+              <form onSubmit={handlePreConfirm} className="space-y-5 bg-zinc-900/30 p-8 rounded-3xl border border-white/5 shadow-2xl">
+                {/* Project Identity */}
+                <div className="space-y-1.5">
+                  <label className="text-[9px] text-white/20 uppercase tracking-[0.2em] ml-1 font-bold">Project Identity</label>
+                  <div className="relative group">
                     <input
                       type="text"
                       required
-                      className="w-full bg-white/[0.02] border border-white/10 px-5 py-3.5 rounded-xl text-white placeholder-white/20 focus:outline-none focus:border-white/30 focus:bg-white/[0.04] transition-all font-light"
-                      placeholder="e.g. Website Redesign"
+                      className="w-full bg-white/[0.02] border border-white/5 px-5 py-3 rounded-xl text-white placeholder-white/10 focus:outline-none focus:border-white/10 focus:bg-white/[0.04] transition-all font-light text-sm"
+                      placeholder="Project title..."
                       value={formData.jobTitle}
                       onChange={e => setFormData({ ...formData, jobTitle: e.target.value })}
                     />
+                    <Briefcase className="absolute right-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/10 group-focus-within:text-white/30 transition-colors" />
                   </div>
+                </div>
 
-                  <div>
-                    <label className="mb-2 block text-[10px] font-medium tracking-widest text-white/40 uppercase">
-                      Total Payment (USD)
-                    </label>
-                    <div className="relative">
-                      <span className="absolute left-5 top-1/2 -translate-y-1/2 text-white/40 font-light">
-                        $
-                      </span>
+                {/* Freelancer Wallet */}
+                <div className="space-y-1.5">
+                  <label className="text-[9px] text-white/20 uppercase tracking-[0.2em] ml-1 font-bold">Freelancer Wallet</label>
+                  <div className="relative group">
+                    <input
+                      type="text"
+                      required
+                      className="w-full bg-white/[0.02] border border-white/5 px-5 py-3 rounded-xl text-white placeholder-white/10 focus:outline-none focus:border-white/10 focus:bg-white/[0.04] transition-all font-mono text-[11px] tracking-wider"
+                      placeholder="Solana address..."
+                      value={formData.freelancerWallet}
+                      onChange={e => setFormData({ ...formData, freelancerWallet: e.target.value })}
+                    />
+                    <Wallet className="absolute right-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/10 group-focus-within:text-white/30 transition-colors" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] text-white/20 uppercase tracking-[0.2em] ml-1 font-bold">Funding Amount (USD)</label>
+                    <div className="relative group">
                       <input
                         type="number"
-                        min="1"
-                        step="0.01"
                         required
-                        className="w-full bg-white/[0.02] border border-white/10 pl-9 pr-5 py-3.5 rounded-xl text-white placeholder-white/20 focus:outline-none focus:border-white/30 focus:bg-white/[0.04] transition-all font-light"
-                        placeholder="1000.00"
+                        className="w-full bg-white/[0.02] border border-white/5 pl-9 pr-4 py-3 rounded-xl text-white placeholder-white/10 focus:outline-none focus:border-white/10 focus:bg-white/[0.04] transition-all font-light text-sm"
+                        placeholder="0.00"
                         value={formData.amount}
                         onChange={e => setFormData({ ...formData, amount: e.target.value })}
                       />
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 text-xs font-light">$</span>
+                      <Zap className="absolute right-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/10 group-focus-within:text-white/30 transition-colors" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] text-white/20 uppercase tracking-[0.2em] ml-1 font-bold">Auto-Release Schedule</label>
+                    <div className="relative group">
+                      <select
+                        className="w-full bg-white/[0.02] border border-white/5 px-5 py-3 rounded-xl text-white focus:outline-none focus:border-white/10 focus:bg-white/[0.04] transition-all font-light text-sm appearance-none cursor-pointer"
+                        value={formData.durationDays}
+                        onChange={e => setFormData({ ...formData, durationDays: parseInt(e.target.value) })}
+                      >
+                        <option value={7} className="bg-zinc-900 text-xs">7 Days</option>
+                        <option value={14} className="bg-zinc-900 text-xs">14 Days</option>
+                        <option value={30} className="bg-zinc-900 text-xs">30 Days</option>
+                        <option value={60} className="bg-zinc-900 text-xs">60 Days</option>
+                      </select>
+                      <Clock className="absolute right-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/10 group-focus-within:text-white/30 transition-colors pointer-events-none" />
                     </div>
                   </div>
                 </div>
 
-                <div>
-                  <label className="mb-2 block text-[10px] font-medium tracking-widest text-white/40 uppercase">
-                    Freelancer Wallet Address
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    className="w-full bg-white/[0.02] border border-white/10 px-5 py-3.5 rounded-xl text-white placeholder-white/20 focus:outline-none focus:border-white/30 focus:bg-white/[0.04] transition-all font-mono text-sm tracking-wide"
-                    placeholder="Enter Solana public key..."
-                    value={formData.freelancerWallet}
-                    onChange={e =>
-                      setFormData({ ...formData, freelancerWallet: e.target.value })
-                    }
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-[10px] font-medium tracking-widest text-white/40 uppercase">
-                    Payment Release Schedule (Auto-Approval)
-                  </label>
-                  <select
-                    className="w-full bg-white/[0.02] border border-white/10 px-5 py-3.5 rounded-xl text-white focus:outline-none focus:border-white/30 focus:bg-white/[0.04] transition-all font-light appearance-none"
-                    value={formData.durationDays}
-                    onChange={e => setFormData({ ...formData, durationDays: parseInt(e.target.value) })}
+                <div className="pt-6 flex flex-col items-center gap-4">
+                  <button
+                    type="submit"
+                    disabled={isCreating}
+                    className="w-full py-4 bg-white text-black text-[10px] font-bold uppercase tracking-[0.3em] rounded-xl hover:bg-gray-100 active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50 shadow-xl"
                   >
-                    <option value={7} className="bg-zinc-900">7 Days (Fast-track)</option>
-                    <option value={14} className="bg-zinc-900">14 Days (Standard)</option>
-                    <option value={30} className="bg-zinc-900">30 Days (Monthly)</option>
-                    <option value={60} className="bg-zinc-900">60 Days (Enterprise)</option>
-                  </select>
-                  <p className="text-[10px] text-white/30 mt-2 font-light">
-                    Funds will automatically release to the freelancer after this period if no dispute is raised.
-                  </p>
+                    {isCreating ? (
+                      <><Loader2 className="h-3 w-3 animate-spin" /> Authorizing...</>
+                    ) : (
+                      <>
+                        Secure Project & Hire
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </>
+                    )}
+                  </button>
+                  <div className="flex items-center gap-2 px-4 py-1.5 bg-white/[0.02] border border-white/5 rounded-full">
+                    <ShieldCheck className="w-3 h-3 text-emerald-500/40" />
+                    <span className="text-[8px] text-white/20 uppercase tracking-[0.25em] font-medium font-mono">Verified Smart Contract Protection</span>
+                  </div>
                 </div>
-
-                <button
-                  type="submit"
-                  disabled={isCreating}
-                  className="mt-6 flex items-center justify-center gap-2 px-8 py-4 bg-white hover:bg-gray-100 text-black font-medium rounded-xl transition-all w-full disabled:opacity-50 shadow-[0_0_20px_rgba(255,255,255,0.1)]"
-                >
-                  {isCreating ? (
-                    <><Loader2 className="h-5 w-5 animate-spin" /> Securing Funds on Network...</>
-                  ) : (
-                    "Secure Funds & Hire"
-                  )}
-                </button>
               </form>
             </div>
 
             {/* Info panel */}
-            <div className="relative lg:col-span-2 p-8 md:p-10 liquid-glass-strong glow-ring noise rounded-3xl flex flex-col justify-between transition-colors">
-              <div>
-                <div className="flex items-center gap-3 mb-6">
-                  <Info className="w-5 h-5 text-white/50" strokeWidth={1.5} />
-                  <h3 className="text-lg font-light text-white tracking-wide">
-                    How it works
-                  </h3>
+            <div className="lg:col-span-5 bg-zinc-900/40 border border-white/10 rounded-3xl p-6 md:p-8 flex flex-col shadow-2xl backdrop-blur-md">
+              <div className="flex items-center gap-3 mb-8">
+                <div className="p-2 bg-white/5 rounded-lg">
+                  <Info className="w-4 h-4 text-white/40" strokeWidth={1.5} />
                 </div>
-                <ul className="space-y-6 text-sm text-white/60 font-light">
-                  <li className="flex items-start gap-4">
-                    <div className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-white/40" />
-                    <p className="leading-relaxed">
+                <h3 className="text-[11px] font-bold text-white/40 tracking-[0.2em] uppercase">
+                  How it works
+                </h3>
+              </div>
+              
+              <div className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex gap-4 group">
+                    <div className="h-6 w-6 shrink-0 rounded-full bg-white/5 border border-white/5 flex items-center justify-center text-[10px] text-white/30 font-mono group-hover:border-white/20 transition-colors">01</div>
+                    <p className="text-[12px] text-white/40 leading-relaxed font-light">
                       Enter the project details and the freelancer's wallet address.
                     </p>
-                  </li>
-                  <li className="flex items-start gap-4">
-                    <div className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-white/40" />
-                    <p className="leading-relaxed">
+                  </div>
+                  <div className="flex gap-4 group">
+                    <div className="h-6 w-6 shrink-0 rounded-full bg-white/5 border border-white/5 flex items-center justify-center text-[10px] text-white/30 font-mono group-hover:border-white/20 transition-colors">02</div>
+                    <p className="text-[12px] text-white/40 leading-relaxed font-light">
                       Securely lock the payment upfront using your preferred method.
                     </p>
-                  </li>
-                  <li className="flex items-start gap-4">
-                    <div className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-white/40" />
-                    <p className="leading-relaxed">
+                  </div>
+                  <div className="flex gap-4 group">
+                    <div className="h-6 w-6 shrink-0 rounded-full bg-white/5 border border-white/5 flex items-center justify-center text-[10px] text-white/30 font-mono group-hover:border-white/20 transition-colors">03</div>
+                    <p className="text-[12px] text-white/40 leading-relaxed font-light">
                       Funds are held safely. The final payment is only released once you are completely satisfied with the work.
                     </p>
-                  </li>
-                </ul>
-              </div>
+                  </div>
+                </div>
 
-              <div className="mt-10 p-6 liquid-glass rounded-2xl">
-                <p className="text-xs text-gray-400 leading-relaxed font-light">
-                  <span className="text-white font-medium">Win-Win:</span>{" "}
-                  Once funds are secured, your freelancer can instantly access up to 85% of their pay to get started. You stay protected, and they get paid without waiting.
-                </p>
+                <div className="mt-6 pt-6 border-t border-white/5">
+                  <div className="bg-emerald-500/5 rounded-2xl p-5 border border-emerald-500/10 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                      <Zap className="w-8 h-8 text-emerald-500" />
+                    </div>
+                    <div className="flex items-center gap-2 mb-2.5 text-emerald-500/80 uppercase tracking-[0.2em] text-[9px] font-bold">
+                      <Zap className="w-3 h-3 animate-pulse" />
+                      Win-Win Protocol
+                    </div>
+                    <p className="text-[11px] text-emerald-500/40 leading-relaxed font-light">
+                      Once funds are secured, your freelancer can instantly access up to <span className="text-emerald-400 font-medium">85% of their pay</span> to get started. You stay protected, and they get paid without waiting.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -626,6 +664,85 @@ function ClientDashboardContent() {
               </form>
             </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
+      {/* Confirmation Modal */}
+      <AnimatePresence>
+        {showConfirmModal && pendingJobData && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowConfirmModal(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="relative w-full max-w-md bg-zinc-900 border border-white/10 shadow-2xl rounded-[2rem] p-7 md:p-9 overflow-hidden text-left"
+            >
+              {/* Header */}
+              <div className="mb-6">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-white/40" />
+                  <span className="text-[9px] uppercase tracking-[0.25em] text-white/40 font-bold">Finalize Project Funding</span>
+                </div>
+                <h3 className="text-xl font-light text-white tracking-tight">Secure Agreement Authorization</h3>
+              </div>
+
+              {/* Stats Grid */}
+              <div className="space-y-3.5 mb-7 bg-white/[0.03] rounded-2xl p-5 border border-white/5 shadow-inner">
+                <div className="flex items-center justify-between pb-3 border-b border-white/5">
+                  <span className="text-[10px] text-white/20 uppercase tracking-widest font-medium">Project Name</span>
+                  <span className="text-xs text-white font-light">{pendingJobData.jobTitle}</span>
+                </div>
+                <div className="flex items-center justify-between py-1 border-b border-white/5">
+                  <span className="text-[10px] text-white/20 uppercase tracking-widest font-medium">Funding Amount</span>
+                  <span className="text-sm text-emerald-400 font-bold">${pendingJobData.amount} <span className="text-[9px] text-white/20 font-light">USDC</span></span>
+                </div>
+                <div className="flex items-center justify-between py-1 border-b border-white/5">
+                  <span className="text-[10px] text-white/20 uppercase tracking-widest font-medium">Freelancer</span>
+                  <span className="text-[9px] font-mono text-white/40">{pendingJobData.freelancerWallet.slice(0, 6)}...{pendingJobData.freelancerWallet.slice(-6)}</span>
+                </div>
+                <div className="flex items-center justify-between py-1 border-b border-white/5">
+                  <span className="text-[10px] text-white/20 uppercase tracking-widest font-medium">Escrow PDA Address</span>
+                  <span className="text-[9px] font-mono text-white/40">{pendingJobData.escrowPda.slice(0, 8)}...{pendingJobData.escrowPda.slice(-8)}</span>
+                </div>
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-[10px] text-white/20 uppercase tracking-widest font-medium">Network Fees</span>
+                  <div className="text-right">
+                    <span className="text-[9px] block text-emerald-500/80 font-bold uppercase tracking-widest">Sponsored by FlowFi</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Message */}
+              <div className="px-1 mb-7">
+                <p className="text-[11px] text-white/40 leading-relaxed font-light">
+                  You will provide a one-time authorization to secure these funds. This ensures <span className="text-white/60">wallet integrity</span> and project protection. FlowFi covers all infrastructure costs for this deployment.
+                </p>
+              </div>
+
+              {/* Actions */}
+              <div className="flex flex-col gap-2.5">
+                <button
+                  onClick={handleCreateJob}
+                  disabled={isCreating}
+                  className="w-full py-4 bg-white text-black text-[10px] font-bold uppercase tracking-[0.2em] rounded-xl hover:bg-gray-100 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                >
+                  {isCreating ? <Loader2 className="h-3 w-3 animate-spin" /> : "Authorize & Pay via Dodo"}
+                </button>
+                <button
+                  onClick={() => setShowConfirmModal(false)}
+                  className="w-full py-3.5 text-white/20 text-[9px] font-bold uppercase tracking-[0.2em] hover:text-white/40 transition-all"
+                >
+                  Edit Details
+                </button>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>

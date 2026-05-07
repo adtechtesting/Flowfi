@@ -126,7 +126,7 @@ export default function LandingPage() {
 
   return (
     <div className="bg-black min-h-screen w-full flex flex-col font-sans selection:bg-white/20 selection:text-white">
-      <Spotlight></Spotlight>
+
       <div className="relative min-h-[100svh] w-full overflow-hidden flex flex-col justify-center bg-black border-b border-white/5">
         <video
           autoPlay

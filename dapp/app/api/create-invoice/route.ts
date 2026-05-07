@@ -8,7 +8,7 @@ import { PublicKey } from "@solana/web3.js";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { amount, jobTitle, jobDescription, clientWallet, freelancerWallet, durationDays } = body;
+    const { amount, jobTitle, jobDescription, clientWallet, freelancerWallet, durationDays, customInvoiceId } = body;
 
     if (!amount || !clientWallet || !freelancerWallet || !jobTitle) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -23,8 +23,7 @@ export async function POST(req: Request) {
 
     const baseUrl = process.env.NEXT_PUBLIC_URL || "http://localhost:3000";
 
-
-    const dodoInvoiceId = "inv_" + Date.now().toString().slice(-10);
+    const dodoInvoiceId = customInvoiceId || ("inv_" + Date.now().toString().slice(-10));
     const returnUrl = `${baseUrl}/client?success=true&invoiceId=${dodoInvoiceId}`;
 
     let dodoPaymentUrl: string;

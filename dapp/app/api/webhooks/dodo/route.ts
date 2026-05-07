@@ -101,9 +101,9 @@ export async function POST(req: Request) {
 
   await prisma.invoice.update({
     where: { id: invoice.id },
-    data: { 
-      status: "ESCROW_FUNDED", 
-      webhookProcessed: true, 
+    data: {
+      status: "ESCROW_FUNDED",
+      webhookProcessed: true,
       txSignature: txSig,
       scheduledReleaseAt: releaseDate
     },
