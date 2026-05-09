@@ -31,6 +31,10 @@ export async function POST(req: Request) {
 
     const accessToken = tokenData.data?.accessToken;
 
+    const host = req.headers.get('host') || 'localhost:3000';
+    const protocol = host.includes('localhost') ? 'http' : 'https';
+    const origin = `${protocol}://${host}`;
+
     // 2. Create Session
     const sessionResponse = await fetch('https://api-gateway-stg.transak.com/api/v2/auth/session', {
       method: 'POST',
@@ -42,15 +46,20 @@ export async function POST(req: Request) {
         widgetParams: {
           apiKey: apiKey,
           productsAvailed: 'SELL',
+          tradeType: 'SELL',
           isBuyOrSell: 'SELL',
           cryptoCurrencyCode: 'USDC',
+          cryptoCurrency: 'USDC',
+          fiatCurrency: 'INR',
           network: 'solana',
           cryptoAmount: amount,
           walletAddress: walletAddress,
-          fiatCurrency: 'INR',
-          paymentMethod: 'inr_bank_transfer',
+          disableWalletAddressEdit: true,
+          themeColor: '000000',
           exchangeScreenTitle: 'Withdraw to Bank',
-          environment: 'STAGING'
+          environment: 'STAGING',
+          referrerDomain: origin,
+          redirectURL: origin
         }
       })
     });

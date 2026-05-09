@@ -154,17 +154,13 @@ export default function LandingPage() {
 
                 <FadeIn delay={1200} duration={800}>
                   <h2 className="text-xl md:text-2xl font-light text-white/70 tracking-tight mt-6">
-                    FlowFi locks your client’s payment the moment they pay.<br className="hidden md:block" />
-                    You access <span className="text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">85% instantly</span> — not in 30 days.
+                    FlowFi locks client payments upfront so freelancers can <br className="hidden md:block" />
+                    access <span className="text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">85% instantly</span> — not weeks later.
                   </h2>
                 </FadeIn>
               </div>
 
-              <FadeIn delay={1600} duration={1000}>
-                <p className="max-w-2xl text-base md:text-xl text-gray-400 font-light mb-10 leading-relaxed tracking-wide mx-auto">
-                  FlowFi is not a payment processor — it’s an escrow-backed liquidity layer that lets freelancers unlock earnings early.
-                </p>
-              </FadeIn>
+
 
               <FadeIn delay={2000} duration={1000} className="w-full flex flex-col items-center">
                 <div className="flex flex-col sm:flex-row items-center gap-4 w-full justify-center">
@@ -183,13 +179,21 @@ export default function LandingPage() {
                   </Link>
                 </div>
 
-                <div className="mt-12 flex flex-col md:flex-row items-center justify-center gap-3 md:gap-8 text-sm text-gray-400 font-medium tracking-wider uppercase text-balance border-t border-white/10 pt-6">
-                  <span className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.6)]"></span>
-                    Powered by Dodo Payments
+                <div className="mt-10 flex flex-col md:flex-row items-center justify-center gap-3 md:gap-5 text-sm md:text-[15px] text-white/45 border-t border-white/10 pt-6">
+
+                  <div className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_rgba(74,222,128,0.8)]" />
+
+                    <span className="font-medium text-white/55">
+                      Powered by Dodo Payments
+                    </span>
+                  </div>
+
+                  <span className="hidden md:block text-white/15">•</span>
+
+                  <span>
+                    Cards, bank transfers & stablecoins
                   </span>
-                  <span className="hidden md:block text-white/20">•</span>
-                  <span>Familiar methods (cards, bank transfers)</span>
                 </div>
               </FadeIn>
             </div>
@@ -197,7 +201,7 @@ export default function LandingPage() {
         </main>
       </div>
 
-      {/* ----------------- MARQUEE ----------------- */}
+
       <section className="relative bg-black py-16 overflow-hidden border-b border-white/5">
         <div className="text-center text-xs uppercase tracking-[0.3em] text-gray-500 mb-10">
           Powered by the best
