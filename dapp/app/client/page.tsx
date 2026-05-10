@@ -12,6 +12,27 @@ import {
 } from "../lib/solana/client";
 import { getEscrowPda } from "../lib/solana/constants";
 
+const STATUS_CONFIG: Record<string, { label: string; color: string; dot: string }> = {
+  PENDING: { label: "Awaiting Funds", color: "text-yellow-400/70 bg-yellow-500/5 border-yellow-500/20", dot: "bg-yellow-400" },
+  ESCROW_FUNDED: { label: "Funds Secured", color: "text-green-400/70 bg-green-500/5 border-green-500/20", dot: "bg-green-400" },
+  FUNDED: { label: "Funds Secured", color: "text-green-400/70 bg-green-500/5 border-green-500/20", dot: "bg-green-400" },
+  ADVANCED: { label: "Advance Paid", color: "text-amber-400/70 bg-amber-500/5 border-amber-500/20", dot: "bg-amber-400" },
+  APPROVED: { label: "Approved", color: "text-blue-400/70 bg-blue-500/5 border-blue-500/20", dot: "bg-blue-400" },
+  RELEASED: { label: "Fully Paid", color: "text-purple-400/70 bg-purple-500/5 border-purple-500/20", dot: "bg-purple-400" },
+  CANCELLED: { label: "Cancelled", color: "text-red-400/70 bg-red-500/5 border-red-500/20", dot: "bg-red-400" },
+  FAILED: { label: "Failed", color: "text-red-400/70 bg-red-500/5 border-red-500/20", dot: "bg-red-500" },
+};
+
+const StatusBadge = ({ status }: { status: string }) => {
+  const c = STATUS_CONFIG[status] ?? { label: status, color: "text-white/40 bg-white/5 border-white/10", dot: "bg-white/30" };
+  return (
+    <span className={`inline-flex items-center gap-2 px-2.5 py-1 text-[9px] font-bold border uppercase tracking-[0.2em] ${c.color} rounded-sm`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${c.dot} shadow-[0_0_8px_${c.dot.replace('bg-', '')}]`} />
+      {c.label}
+    </span>
+  );
+};
+
 interface PendingJob {
   jobTitle: string;
   amount: string;
@@ -37,6 +58,40 @@ function ClientDashboardContent() {
     if (publicKey) loadMyJobs();
     else setJobs([]);
   }, [publicKey]);
+
+  // Real-time synchronization for pending jobs
+  useEffect(() => {
+    if (!publicKey || jobs.length === 0) return;
+
+    const pendingJobs = jobs.filter(j => j.status === "PENDING" && j.escrowPda);
+    if (pendingJobs.length === 0) return;
+
+    const subscriptions: number[] = [];
+
+    import("../lib/solana/client").then(({ subscribeToEscrow }) => {
+      pendingJobs.forEach(job => {
+        try {
+          const subId = subscribeToEscrow(
+            connection,
+            new PublicKey(job.escrowPda),
+            () => {
+              console.log(`Live update detected for project: ${job.jobTitle}`);
+              loadMyJobs();
+            }
+          );
+          subscriptions.push(subId);
+        } catch (e) {
+          console.error("Subscription failed:", e);
+        }
+      });
+    });
+
+    return () => {
+      subscriptions.forEach(id => {
+        try { connection.removeAccountChangeListener(id); } catch (e) { }
+      });
+    };
+  }, [jobs, connection, publicKey]);
 
   const loadMyJobs = async () => {
     if (!publicKey) return;
@@ -173,6 +228,11 @@ function ClientDashboardContent() {
     e.preventDefault();
     if (!publicKey) return alert("Please connect your wallet first");
 
+    const amountNum = parseFloat(formData.amount);
+    if (amountNum > 10) {
+      return alert("Devnet Limit: Maximum funding amount is $10.00 during the testing period.");
+    }
+
     try {
       new PublicKey(formData.freelancerWallet);
     } catch {
@@ -192,7 +252,7 @@ function ClientDashboardContent() {
 
   const handleCreateJob = async () => {
     if (!publicKey || !pendingJobData) return;
-    
+
     setIsCreating(true);
     setShowConfirmModal(false);
 
@@ -374,6 +434,7 @@ function ClientDashboardContent() {
                       <input
                         type="number"
                         required
+                        max="10"
                         className="w-full bg-white/[0.02] border border-white/5 pl-9 pr-4 py-3 rounded-xl text-white placeholder-white/10 focus:outline-none focus:border-white/10 focus:bg-white/[0.04] transition-all font-light text-sm"
                         placeholder="0.00"
                         value={formData.amount}
@@ -382,6 +443,7 @@ function ClientDashboardContent() {
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 text-xs font-light">$</span>
                       <Zap className="absolute right-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/10 group-focus-within:text-white/30 transition-colors" />
                     </div>
+                    <p className="mt-2 text-[8px] text-amber-500/50 uppercase tracking-widest font-bold">Testing Safety Limit: Max $10.00</p>
                   </div>
 
                   <div className="space-y-1.5">
@@ -435,7 +497,7 @@ function ClientDashboardContent() {
                   How it works
                 </h3>
               </div>
-              
+
               <div className="space-y-6">
                 <div className="space-y-4">
                   <div className="flex gap-4 group">
@@ -500,39 +562,31 @@ function ClientDashboardContent() {
                     : job.status;
 
                   return (
-                    <div key={job.id} className="relative p-6 md:p-8 liquid-glass-strong glow-ring noise rounded-3xl transition-all flex flex-col md:flex-row gap-8 justify-between items-center group">
-                      {/* Micro Corner Accents */}
-                      <div className="absolute -top-[1px] -left-[1px] h-[3px] w-[3px] bg-white/10 group-hover:bg-white/40 transition-colors"></div>
-                      <div className="absolute -top-[1px] -right-[1px] h-[3px] w-[3px] bg-white/10 group-hover:bg-white/40 transition-colors"></div>
-                      <div className="absolute -bottom-[1px] -left-[1px] h-[3px] w-[3px] bg-white/10 group-hover:bg-white/40 transition-colors"></div>
-                      <div className="absolute -bottom-[1px] -right-[1px] h-[3px] w-[3px] bg-white/10 group-hover:bg-white/40 transition-colors"></div>
-
+                    <div key={job.id} className="relative p-6 md:p-8 bg-zinc-900/40 border border-white/10 rounded-3xl transition-all flex flex-col md:flex-row gap-8 justify-between items-center group shadow-xl backdrop-blur-md">
                       <div className="flex-1 w-full">
-                        <div className="flex items-center gap-4 mb-4">
+                        <div className="flex items-center gap-4 mb-5">
                           <h2 className="text-xl font-light text-white tracking-tight">{job.jobTitle}</h2>
-                          <span className="text-[9px] px-2 py-0.5 bg-white/5 text-white/50 uppercase tracking-widest border border-white/10 rounded-sm">
-                            {onChainStatus.replace(/_/g, ' ')}
-                          </span>
+                          <StatusBadge status={onChainStatus} />
                         </div>
 
-                        <div className="flex flex-wrap gap-12 border-t border-white/5 pt-5">
-                          <div>
-                            <p className="text-[9px] text-white/40 uppercase tracking-[0.2em] mb-1.5">Date Created</p>
-                            <p className="text-white/80 font-light">{new Date(job.createdAt).toLocaleDateString()}</p>
+                        <div className="flex flex-wrap gap-12 border-t border-white/5 pt-6">
+                          <div className="space-y-1.5">
+                            <p className="text-[9px] text-white/30 uppercase tracking-[0.2em] font-bold">Funds Secured</p>
+                            <p className="text-emerald-400 font-light text-lg tracking-tight">${(job.amount / 100).toLocaleString()} <span className="text-[10px] text-white/20 ml-1 font-mono">USDC</span></p>
                           </div>
-                          <div>
-                            <p className="text-[9px] text-white/40 uppercase tracking-[0.2em] mb-1.5">Total Secured</p>
-                            <p className="text-green-400/90 font-light">${job.amount / 100} USDC</p>
+                          <div className="space-y-1.5">
+                            <p className="text-[9px] text-white/30 uppercase tracking-[0.2em] font-bold">Service Provider</p>
+                            <p className="text-white/40 font-mono text-xs mt-0.5 tracking-wider">{job.freelancerWallet.slice(0, 8)}...{job.freelancerWallet.slice(-8)}</p>
                           </div>
-                          <div>
-                            <p className="text-[9px] text-white/40 uppercase tracking-[0.2em] mb-1.5">Freelancer</p>
-                            <p className="text-white/50 font-mono text-sm mt-0.5">{job.freelancerWallet.slice(0, 4)}...{job.freelancerWallet.slice(-4)}</p>
+                          <div className="space-y-1.5">
+                            <p className="text-[9px] text-white/30 uppercase tracking-[0.2em] font-bold">Deployment Date</p>
+                            <p className="text-white/40 font-light text-sm">{new Date(job.createdAt).toLocaleDateString(undefined, { dateStyle: 'medium' })}</p>
                           </div>
                           {job.scheduledReleaseAt && (
-                            <div>
-                              <p className="text-[9px] text-amber-500/60 uppercase tracking-[0.2em] mb-1.5">Auto-Release Date</p>
-                              <p className="text-amber-500/90 font-light flex items-center gap-1.5">
-                                <Clock className="w-3 h-3" />
+                            <div className="space-y-1.5">
+                              <p className="text-[9px] text-amber-500/40 uppercase tracking-[0.2em] font-bold">Auto-Release Protcol</p>
+                              <p className="text-amber-500/80 font-light text-sm flex items-center gap-2">
+                                <Clock className="w-3.5 h-3.5 opacity-60" />
                                 {new Date(job.scheduledReleaseAt).toLocaleDateString()}
                               </p>
                             </div>
@@ -542,25 +596,26 @@ function ClientDashboardContent() {
 
                       <div className="w-full md:w-auto shrink-0 flex flex-col items-center md:items-end gap-3 mt-4 md:mt-0">
                         {job.status === "PENDING" && (
-                          <div className="w-full md:w-48 flex flex-col gap-2">
+                          <div className="w-full md:w-52 flex flex-col gap-2">
+                            <button
+                              onClick={() => handleForceFund(job)}
+                              className="w-full text-[10px] py-3.5 bg-emerald-500/[0.05] text-emerald-500/70 border border-emerald-500/10 hover:border-emerald-500/30 hover:text-emerald-500 transition-all uppercase tracking-[0.2em] font-bold rounded-xl flex items-center justify-center gap-2"
+                            >
+                              <Zap className="w-3 h-3" />
+                              Dev: Secure Funds
+                            </button>
                             <button
                               onClick={() => setEditingJob({ ...job, amount: job.amount / 100 })}
-                              className="w-full text-[10px] py-2 bg-white/5 text-white/70 border border-white/10 hover:bg-white/10 transition-colors uppercase tracking-widest rounded-lg"
+                              className="w-full text-[10px] py-3.5 bg-white/[0.03] text-white/50 border border-white/5 hover:border-white/20 hover:text-white transition-all uppercase tracking-[0.2em] font-bold rounded-xl"
                             >
-                              Edit Details
+                              Edit Protocol
                             </button>
                             <button
                               onClick={() => handleDeleteJob(job.id)}
                               disabled={isDeletingId === job.id}
-                              className="w-full text-[10px] py-2 bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-colors uppercase tracking-widest disabled:opacity-50 rounded-lg"
+                              className="w-full text-[10px] py-3.5 bg-red-500/[0.03] text-red-400/50 border border-red-500/10 hover:border-red-500/30 hover:text-red-400 transition-all uppercase tracking-[0.2em] font-bold rounded-xl disabled:opacity-50"
                             >
-                              {isDeletingId === job.id ? "..." : "Delete Project"}
-                            </button>
-                            <button
-                              onClick={() => handleForceFund(job)}
-                              className="w-full text-[10px] py-2 bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 transition-colors uppercase tracking-widest rounded-lg"
-                            >
-                              Force Fund (Dev)
+                              {isDeletingId === job.id ? "Processing..." : "Terminate Agreement"}
                             </button>
                           </div>
                         )}
@@ -569,15 +624,15 @@ function ClientDashboardContent() {
                           <button
                             onClick={() => handleApproveMilestone(job)}
                             disabled={approvingId === job.id}
-                            className="w-full md:w-48 flex justify-center items-center gap-2 px-6 py-3.5 bg-white hover:bg-gray-100 text-black font-medium rounded-lg transition-all disabled:opacity-50 text-sm shadow-[0_0_15px_rgba(255,255,255,0.1)]"
+                            className="w-full md:w-52 flex justify-center items-center gap-3 px-6 py-4 bg-white text-black text-[11px] font-bold uppercase tracking-[0.2em] rounded-xl hover:bg-gray-100 transition-all disabled:opacity-50 shadow-xl"
                           >
-                            {approvingId === job.id ? <><Loader2 className="h-4 w-4 animate-spin" /> Approving...</> : "Approve & Release"}
+                            {approvingId === job.id ? <><Loader2 className="h-4 w-4 animate-spin" /> Finalizing...</> : <>Approve & Release <ArrowRight className="w-4 h-4" /></>}
                           </button>
                         )}
 
                         {(job.status === "RELEASED" || job.status === "COMPLETED") && (
-                          <div className="w-full md:w-48 text-sm px-6 py-3.5 bg-white/5 text-white/70 font-light flex items-center justify-center gap-2 border border-white/10 rounded-lg">
-                            <CheckCircle className="h-4 w-4 text-white/50" /> Fully Released
+                          <div className="w-full md:w-52 text-[10px] px-6 py-4 bg-emerald-500/5 text-emerald-500 font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-2 border border-emerald-500/20 rounded-xl">
+                            <CheckCircle className="h-4 w-4" /> Agreement Finalized
                           </div>
                         )}
                       </div>
@@ -625,6 +680,7 @@ function ClientDashboardContent() {
                   <input
                     type="number"
                     min="1"
+                    max="10"
                     step="0.01"
                     required
                     className="w-full bg-white/[0.02] border border-white/10 px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-white/30 transition-all font-light"

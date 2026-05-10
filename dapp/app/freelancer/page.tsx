@@ -280,9 +280,9 @@ export default function FreelancerDashboard() {
                   : (job.amount / 100).toFixed(2);
 
                 const onChainStatusKey = job.onChain ? Object.keys(job.onChain.status)[0] : "unknown";
-                const isFunded = onChainStatusKey === "funded";
-                const isAdvanced = job.onChain?.advanced;
-                const advanceEligible = isFunded && !isAdvanced;
+                const isFunded = onChainStatusKey === "funded" || job.status === "ESCROW_FUNDED" || job.status === "ADVANCED" || job.status === "FUNDED";
+                const isAdvanced = job.onChain?.advanced || job.status === "ADVANCED";
+                const advanceEligible = (isFunded || job.status === "ESCROW_FUNDED") && !isAdvanced;
 
                 const advanceUsdc = isAdvanced && job.onChain
                   ? formatUsdc(job.onChain.advanceAmount)

@@ -219,73 +219,141 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Section 01: The Problem (Structural Audit) */}
+      <section className="relative bg-black text-white py-24 md:py-32 px-6 md:px-12 lg:px-16 overflow-hidden">
+        {/* Background Sophistication */}
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
+          style={{ backgroundImage: "radial-gradient(circle at 2px 2px, white 1px, transparent 0)", backgroundSize: "40px 40px" }} />
+        <div className="absolute top-0 left-1/4 w-px h-full bg-gradient-to-b from-transparent via-white/5 to-transparent" />
+        <div className="absolute top-0 right-1/4 w-px h-full bg-gradient-to-b from-transparent via-white/5 to-transparent" />
 
-      <section className="relative bg-black text-white py-32 px-6 md:px-12 lg:px-16 overflow-hidden">
-        <div className="absolute inset-0 bg-grid opacity-30" />
         <div className="relative max-w-6xl mx-auto">
-          <SectionHeading eyebrow="01 — The Problem" className="text-3xl md:text-5xl lg:text-6xl font-normal max-w-4xl tracking-tightest">
-            You finished. <br className="hidden md:block" />
-            <span className="gradient-text">The money didn’t.</span>
-          </SectionHeading>
 
-          <div className="mt-20">
-            <Reveal delay={100}>
-              <div className="liquid-glass-strong glow-ring rounded-[2rem] p-8 md:p-12 noise relative flex flex-col md:flex-row gap-12 items-center">
-                <div className="absolute -top-[1px] -left-[1px] h-[3px] w-[3px] bg-white/20"></div>
-                <div className="absolute -bottom-[1px] -right-[1px] h-[3px] w-[3px] bg-white/20"></div>
-
-                <div className="flex-1">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-red-500/10 border border-red-500/20 rounded-full mb-6">
-                    <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-                    <span className="text-xs text-red-400 tracking-wider uppercase font-medium">The Old Way</span>
-                  </div>
-                  <h3 className="text-xl md:text-2xl text-gray-200 leading-snug tracking-tight font-light mb-6">
-                    Waiting to get paid is still normal.
-                  </h3>
-                  <ul className="text-base text-gray-400 leading-relaxed font-light space-y-3 mb-6">
-                    <li className="flex items-start gap-3"><span className="text-white/20 mt-1">•</span> Freelancers wait 30–60 days after finishing work</li>
-                    <li className="flex items-start gap-3"><span className="text-white/20 mt-1">•</span> Not because the client is slow — but because of old banking</li>
-                    <li className="flex items-start gap-3"><span className="text-white/20 mt-1">•</span> FlowFi makes that delay unnecessary</li>
-                  </ul>
-                  <p className="text-base text-gray-400 leading-relaxed font-light">
-                    You delivered the project. The client is happy. The invoice is sent. And now you wait. FlowFi ensures your money matches your work.
-                  </p>
-                </div>
-
-                <div className="w-full md:w-[400px] shrink-0 bg-black/50 border border-white/5 rounded-2xl p-6 flex flex-col gap-4">
-                  <div className="flex items-center justify-between pb-4 border-b border-white/5">
-                    <span className="text-sm text-gray-500 uppercase tracking-widest font-medium">Invoice Status</span>
-                    <span className="text-sm text-yellow-500/80 font-mono">Net-30 Pending</span>
-                  </div>
-                  <div className="flex flex-col gap-3">
-                    <div className="h-10 w-full bg-white/[0.02] rounded-lg animate-pulse"></div>
-                    <div className="h-10 w-full bg-white/[0.02] rounded-lg animate-pulse" style={{ animationDelay: '150ms' }}></div>
-                    <div className="h-10 w-3/4 bg-white/[0.02] rounded-lg animate-pulse" style={{ animationDelay: '300ms' }}></div>
-                  </div>
-                </div>
-              </div>
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16 md:mb-24">
+            <SectionHeading eyebrow="Audit 01 — Payment Friction" className="text-2xl md:text-5xl lg:text-6xl font-light max-w-4xl tracking-tightest leading-[1.15] md:leading-[1.1]">
+              Legacy payment infrastructure <br />
+              still delays access to <span className="gradient-text font-normal">earned income.</span>
+            </SectionHeading>
+            <Reveal delay={200} className="max-w-md mb-2">
+              <p className="text-[13px] md:text-sm text-white/40 leading-relaxed font-light">
+                Across the global freelance economy, settlement cycles, approval delays, and cross-border transfers continue to create unnecessary cash flow pressure.
+              </p>
             </Reveal>
           </div>
 
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-6">
-            {[
-              { value: "45d", label: "Avg. Cross-border wait" },
-              { value: "73%", label: "Cash flow struggle" },
-              { value: "$50+", label: "Lost in fees" },
-              { value: "85%", label: "Available Instantly" },
-            ].map((s, i) => (
-              <Reveal key={s.label} delay={i * 100} className="h-full">
-                <div className="liquid-glass-strong glow-ring rounded-[2rem] p-8 md:p-10 noise relative h-full flex flex-col justify-center transition-transform hover:-translate-y-1 duration-500">
-                  <div className="absolute -top-[1px] -left-[1px] h-[3px] w-[3px] bg-white/20"></div>
-                  <div className="absolute -bottom-[1px] -right-[1px] h-[3px] w-[3px] bg-white/20"></div>
-                  <div className="text-3xl md:text-4xl font-light mb-4 tracking-tightest text-white drop-shadow-md">
-                    {s.value}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
+
+            {/* Visual Evidence: The Net-30 Trap */}
+            <Reveal className="lg:col-span-5">
+              <div className="group relative h-full liquid-glass-strong glow-ring rounded-[2rem] md:rounded-[2.5rem] overflow-hidden noise shadow-2xl bg-zinc-950/50 p-8 md:p-12 flex flex-col items-center justify-center">
+                <img
+                  src="/editorial/image.png"
+                  alt="Structural Insight"
+                  className="w-full h-auto max-h-[400px] object-contain transition-all duration-1000 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
+                <div className="absolute top-6 left-6 md:top-8 md:left-8">
+                  <div className="flex items-center gap-2 px-2.5 py-1 bg-white/5 border border-white/10 rounded-full backdrop-blur-md">
+                    <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-[8px] md:text-[9px] text-white/60 uppercase tracking-[0.2em] font-bold">Structural Insight</span>
                   </div>
-                  <div className="text-[10px] text-gray-400 font-medium tracking-widest uppercase">{s.label}</div>
+                </div>
+                <div className="mt-8 w-full">
+                  <h4 className="text-xl md:text-2xl font-light text-white mb-3 md:mb-4 tracking-tight leading-tight">The Net-30 <br />Liquidity Trap.</h4>
+                  <p className="text-xs md:text-sm text-white/50 font-light leading-relaxed">
+                    Traditional payment cycles force freelancers and small teams to wait weeks for money they've already earned. FlowFi reduces that delay through escrow-backed instant access.
+                  </p>
+                </div>
+              </div>
+            </Reveal>
+
+            {/* The Analysis Grid */}
+            <div className="lg:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
+
+              {/* Failure 01: The Settlement Problem */}
+              <Reveal delay={100} className="md:col-span-2">
+                <div className="liquid-glass-strong glow-ring rounded-[1.5rem] md:rounded-[2rem] p-6 md:p-10 noise relative group overflow-hidden">
+                  <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity hidden md:block">
+                    <Globe className="w-32 h-32 text-white" />
+                  </div>
+                  <div className="text-[9px] text-white/20 uppercase tracking-[0.3em] font-bold mb-6 md:mb-8">Insight</div>
+                  <h3 className="text-xl md:text-3xl text-white font-light tracking-tight mb-5 md:mb-6 leading-snug">
+                    "Late payments aren't a reminder problem — they're a <span className="text-white font-normal italic">settlement infrastructure problem.</span>"
+                  </h3>
+                  <div className="flex items-center gap-6 border-t border-white/5 pt-6 md:pt-8">
+                    <div className="flex flex-col">
+                      <span className="text-[8px] md:text-[10px] text-white/30 uppercase tracking-widest font-bold mb-1">Status</span>
+                      <span className="text-[10px] md:text-[11px] text-white/60 font-mono">LEGACY SETTLEMENT FAILURE</span>
+                    </div>
+                  </div>
                 </div>
               </Reveal>
-            ))}
+
+              {/* Failure 02: Community Voice */}
+              <Reveal delay={200}>
+                <div className="liquid-glass-strong glow-ring rounded-[1.5rem] md:rounded-[2rem] p-6 md:p-8 noise relative flex flex-col justify-between h-full group transition-all">
+                  <div className="flex items-center gap-3 mb-6 md:mb-8">
+                    <div className="w-7 h-7 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/40 text-[9px] font-mono group-hover:text-white transition-colors">VOICE</div>
+                    <span className="text-[8px] md:text-[9px] text-white/20 uppercase tracking-[0.2em] font-bold">Community Voice</span>
+                  </div>
+                  <p className="text-sm md:text-base text-white/60 font-light italic leading-relaxed mb-6 md:mb-8">
+                    "40% of my invoices are late. Reminders don't help when payment systems themselves are slow."
+                  </p>
+                  <div className="text-[9px] text-white/20 font-mono uppercase tracking-tighter">Market Pulse 2026</div>
+                </div>
+              </Reveal>
+
+              {/* Failure 03: Market Signal */}
+              <Reveal delay={300}>
+                <div className="liquid-glass-strong glow-ring rounded-[1.5rem] md:rounded-[2rem] p-6 md:p-8 bg-white/[0.02] noise relative flex flex-col justify-between h-full">
+                  <div className="text-[9px] text-white/20 uppercase tracking-[0.3em] font-bold mb-6 md:mb-8">Market Signal</div>
+                  <div className="text-2xl md:text-3xl font-light text-white tracking-tighter mb-3 md:mb-4">$3.5T+</div>
+                  <p className="text-[10px] md:text-xs text-white/40 leading-relaxed font-light uppercase tracking-wider">
+                    Global freelance economy
+                  </p>
+                </div>
+              </Reveal>
+            </div>
           </div>
+
+          {/* Market Signals Grid */}
+          <div className="mt-16 md:mt-24 grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            {[
+              { label: "Market Size", value: "$3.5T+", detail: "Global freelance economy" },
+              { label: "Friction Window", value: "30–45d", detail: "Typical settlement window" },
+              { label: "Systemic Delay", value: "85%", detail: "Freelancers report delayed payments" },
+              { label: "Capital Loss", value: "10%+", detail: "Cross-border payment overhead", highlight: true },
+            ].map((stat, i) => (stat.highlight ? (
+              <Reveal key={stat.label} delay={400 + i * 100}>
+                <div className="group relative liquid-glass-strong glow-ring rounded-[1.5rem] md:rounded-[2rem] p-6 md:p-10 noise border border-white/10 bg-white/[0.02] transition-all hover:bg-white/[0.05]">
+                  <div className="absolute top-0 right-0 p-4 opacity-20 hidden md:block">
+                    <Zap className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="text-[8px] md:text-[10px] text-white/30 uppercase tracking-[0.3em] font-bold mb-3 md:mb-4">{stat.label}</div>
+                  <div className="text-xl md:text-4xl font-light text-white tracking-tightest mb-2">{stat.value}</div>
+                  <div className="text-[9px] md:text-xs text-white/40 font-light">{stat.detail}</div>
+                </div>
+              </Reveal>
+            ) : (
+              <Reveal key={stat.label} delay={400 + i * 100}>
+                <div className="liquid-glass-strong glow-ring rounded-[1.5rem] md:rounded-[2rem] p-6 md:p-10 noise transition-all hover:border-white/20">
+                  <div className="text-[8px] md:text-[10px] text-white/20 uppercase tracking-[0.3em] font-bold mb-3 md:mb-4">{stat.label}</div>
+                  <div className="text-xl md:text-4xl font-light text-white/80 tracking-tightest mb-2">{stat.value}</div>
+                  <div className="text-[9px] md:text-xs text-white/30 font-light">{stat.detail}</div>
+                </div>
+              </Reveal>
+            )))}
+          </div>
+
+          {/* Transition Quote */}
+          <Reveal delay={600}>
+            <div className="mt-16 md:mt-24 pt-16 md:pt-24 border-t border-white/5 text-center">
+              <p className="text-lg md:text-2xl text-gray-400 font-light leading-relaxed max-w-3xl mx-auto italic px-4">
+                "If you reduce the gap between <span className="text-white">work and payment</span>, the late payment problem disappears."
+              </p>
+              <div className="mt-6 text-[9px] text-white/20 uppercase tracking-[0.4em] font-bold">The FlowFi Protocol</div>
+            </div>
+          </Reveal>
         </div>
       </section>
 

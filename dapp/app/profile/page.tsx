@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
     User, Briefcase, Coins, TrendingUp, Clock, CheckCircle,
     ExternalLink, Copy, Loader2, Zap, XCircle, AlertCircle,
+    ArrowRight, ShieldCheck,
 } from "lucide-react";
 import { Spotlight } from "../components/ui/spotlight-new";
 
@@ -49,7 +50,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; dot: string 
 const StatusBadge = ({ status }: { status: string }) => {
     const c = STATUS_CONFIG[status] ?? { label: status, color: "text-white/40 bg-white/5 border-white/10", dot: "bg-white/30" };
     return (
-        <span className={`inline-flex items-center gap-2 px-3 py-1 text-[10px] font-medium border uppercase tracking-widest ${c.color}`} style={{ borderRadius: '2px' }}>
+        <span className={`inline-flex items-center gap-2 px-2.5 py-1 text-[9px] font-bold border uppercase tracking-[0.2em] ${c.color} rounded-sm`}>
             <span className={`w-1.5 h-1.5 rounded-full ${c.dot} shadow-[0_0_8px_${c.dot.replace('bg-', '')}]`} />
             {c.label}
         </span>
@@ -98,32 +99,35 @@ function JobCard({ job, role }: { job: any; role: "client" | "freelancer" }) {
     ].filter(Boolean) as any[];
 
     return (
-        <div className="relative liquid-glass-strong glow-ring noise rounded-3xl transition-all duration-500 group overflow-hidden">
+        <div className="relative bg-zinc-900/40 border border-white/10 rounded-3xl transition-all duration-500 group overflow-hidden shadow-xl backdrop-blur-md">
 
             {/* Summary row */}
             <div
-                className="p-6 flex items-start justify-between gap-4 cursor-pointer"
+                className="p-6 md:p-8 flex items-start justify-between gap-4 cursor-pointer hover:bg-white/[0.02] transition-colors"
                 onClick={() => setExpanded(e => !e)}
             >
                 <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-4 flex-wrap">
-                        <p className="text-xl text-white font-light tracking-tight">{job.jobTitle}</p>
+                    <div className="flex items-center gap-4 flex-wrap mb-4">
+                        <h3 className="text-xl text-white font-light tracking-tight">{job.jobTitle}</h3>
                         <StatusBadge status={job.status} />
                     </div>
-                    <div className="flex gap-6 mt-3 flex-wrap">
-                        <span className="text-sm text-white/60 font-light tracking-wide">
-                            ${amountUsd} USDC
-                        </span>
-                        <span className="text-sm text-white/30 font-mono">
-                            ID: {job.dodoInvoiceId?.slice(0, 8)}...
-                        </span>
-                        <span className="text-sm text-white/30 font-light tracking-wide">
-                            {timeAgo(job.createdAt)}
-                        </span>
+                    <div className="flex gap-8 flex-wrap">
+                        <div className="space-y-1">
+                            <p className="text-[9px] text-white/30 uppercase tracking-[0.2em] font-bold">Project Value</p>
+                            <p className="text-sm text-white/80 font-light tracking-wide">${amountUsd} USDC</p>
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-[9px] text-white/30 uppercase tracking-[0.2em] font-bold">Contract ID</p>
+                            <p className="text-sm text-white/40 font-mono">{job.dodoInvoiceId?.slice(0, 12)}</p>
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-[9px] text-white/30 uppercase tracking-[0.2em] font-bold">Initiated</p>
+                            <p className="text-sm text-white/40 font-light tracking-wide">{timeAgo(job.createdAt)}</p>
+                        </div>
                     </div>
                 </div>
-                <div className="w-8 h-8 flex items-center justify-center liquid-glass rounded-xl shrink-0 transition-transform duration-300" style={{ transform: expanded ? "rotate(180deg)" : "rotate(0deg)" }}>
-                    <span className="text-white/50 text-xs">▼</span>
+                <div className="w-10 h-10 flex items-center justify-center bg-white/5 border border-white/5 rounded-xl shrink-0 transition-all group-hover:border-white/20" style={{ transform: expanded ? "rotate(180deg)" : "rotate(0deg)" }}>
+                    <span className="text-white/30 text-xs">▼</span>
                 </div>
             </div>
 
@@ -136,7 +140,7 @@ function JobCard({ job, role }: { job: any; role: "client" | "freelancer" }) {
                         exit={{ height: 0, opacity: 0 }}
                         className="overflow-hidden"
                     >
-                        <div className="px-6 pb-6 border-t border-white/5 pt-5">
+                        <div className="px-8 pb-8 border-t border-white/5 pt-8 bg-white/[0.01]">
                             <div className="grid md:grid-cols-2 gap-10">
                                 {/* Timeline */}
                                 <div>
@@ -158,13 +162,13 @@ function JobCard({ job, role }: { job: any; role: "client" | "freelancer" }) {
                                         <p className="text-[10px] text-white/40 uppercase tracking-widest mb-3 font-medium">Payment Breakdown</p>
                                         <div className="space-y-2">
                                             {[
-                                                { label: "Total Pay", value: `$${amountUsd} USDC` },
+                                                { label: "Total Project Value", value: `$${amountUsd} USDC` },
                                                 { label: "Instant Advance (85%)", value: `$${advanceUsd} USDC`, highlight: true },
                                                 { label: "Final Release (15%)", value: `$${(parseFloat(amountUsd) - parseFloat(advanceUsd)).toFixed(2)} USDC` },
                                             ].map(({ label, value, highlight }) => (
-                                                <div key={label} className={`flex justify-between text-sm px-4 py-3 font-light tracking-wide ${highlight ? "bg-amber-500/[0.03] border border-amber-500/10 text-amber-400/90 rounded-2xl" : "liquid-glass rounded-xl text-white/60"}`}>
-                                                    <span>{label}</span>
-                                                    <span className="font-mono">{value}</span>
+                                                <div key={label} className={`flex justify-between items-center text-sm px-5 py-4 font-light tracking-wide ${highlight ? "bg-amber-500/5 border border-amber-500/10 text-amber-400 rounded-2xl" : "bg-white/[0.03] border border-white/5 rounded-xl text-white/60"}`}>
+                                                    <span className="text-[11px] uppercase tracking-wider opacity-60 font-medium">{label}</span>
+                                                    <span className="font-mono text-base">{value}</span>
                                                 </div>
                                             ))}
                                         </div>
@@ -267,47 +271,49 @@ export default function ProfilePage() {
             <div className="absolute top-0 left-1/3 w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-[150px] pointer-events-none opacity-50" />
             <div className="absolute bottom-0 right-1/3 w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-[150px] pointer-events-none opacity-40" />
 
-            <div className="mx-auto max-w-5xl relative z-10 flex flex-col gap-10">
+            <div className="mx-auto max-w-5xl relative z-10 flex flex-col gap-12">
 
+                {/* Profile Header */}
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                    className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-white/10 pb-10">
-                    <div className="flex items-center gap-6">
+                    className="flex flex-col md:flex-row md:items-center justify-between gap-8 border-b border-white/5 pb-12">
+                    <div className="flex items-center gap-8">
                         {/* Avatar */}
-                        <div className="w-20 h-20 liquid-glass-strong glow-ring noise rounded-full flex items-center justify-center shrink-0 relative group">
-                            <span className="text-2xl font-light text-white/80">
+                        <div className="w-24 h-24 bg-zinc-900/60 border border-white/10 rounded-full flex items-center justify-center shrink-0 relative shadow-2xl backdrop-blur-md overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 to-purple-500/10 opacity-50" />
+                            <span className="text-3xl font-light text-white/90 relative z-10 font-mono">
                                 {publicKey.toString().slice(0, 2).toUpperCase()}
                             </span>
                         </div>
 
-                        <div>
-                            <h1 className="text-3xl font-light text-white tracking-tight mb-1">
-                                {truncate(publicKey.toString(), 6)}
+                        <div className="space-y-3">
+                            <h1 className="text-4xl font-light text-white tracking-tightest">
+                                Profile Identity
                             </h1>
-                            <div className="flex items-center gap-4 mt-2 flex-wrap">
+                            <div className="flex items-center gap-5 flex-wrap">
                                 <button
                                     onClick={copyAddress}
-                                    className="flex items-center gap-2 text-sm font-mono text-white/40 hover:text-white/80 transition-colors"
+                                    className="flex items-center gap-2.5 px-3 py-1.5 bg-white/[0.03] border border-white/5 rounded-lg text-sm font-mono text-white/40 hover:text-white/80 transition-all group"
                                 >
-                                    <span>{truncate(publicKey.toString(), 12)}</span>
-                                    <Copy className="h-3 w-3" />
-                                    {copied && <span className="text-green-400/80 tracking-wide font-sans text-xs">Copied</span>}
+                                    <span className="group-hover:text-white transition-colors">{truncate(publicKey.toString(), 14)}</span>
+                                    <Copy className="h-3 w-3 opacity-40 group-hover:opacity-100" />
+                                    {copied && <span className="text-emerald-400 text-[10px] font-sans font-bold uppercase tracking-widest ml-1">Copied</span>}
                                 </button>
-                                <span className="text-white/10 hidden sm:inline">|</span>
+                                <div className="h-4 w-[1px] bg-white/10 hidden sm:block" />
                                 <a
                                     href={explorerAddr(publicKey.toString())}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center gap-1.5 text-sm text-white/40 hover:text-white/80 transition-colors tracking-wide"
+                                    className="flex items-center gap-2 text-xs text-white/30 hover:text-white/80 transition-all uppercase tracking-widest font-bold"
                                 >
-                                    View Receipt <ExternalLink className="h-3 w-3" />
+                                    Explorer <ExternalLink className="h-3 w-3" />
                                 </a>
                             </div>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2 px-3 py-1.5 liquid-glass rounded-xl self-start md:self-auto">
-                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
-                        <span className="text-xs font-mono text-white/70 uppercase tracking-widest">Network Live</span>
+                    <div className="flex items-center gap-2.5 px-4 py-2 bg-emerald-500/5 border border-emerald-500/10 rounded-full self-start md:self-auto shadow-[0_0_20px_rgba(16,185,129,0.05)]">
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.8)]" />
+                        <span className="text-[10px] font-bold text-emerald-500/80 uppercase tracking-[0.25em]">Network Active</span>
                     </div>
                 </motion.div>
 
@@ -315,96 +321,182 @@ export default function ProfilePage() {
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
                     className="grid grid-cols-2 md:grid-cols-4 gap-6">
                     {[
-                        { label: "Total Paid Out", value: `$${totalSent.toFixed(2)}`, icon: TrendingUp, color: "text-blue-400/80" },
-                        { label: "Total Earned", value: `$${totalEarned.toFixed(2)}`, icon: Coins, color: "text-amber-400/80" },
-                        { label: "Active Projects", value: String(activeJobs), icon: Clock, color: "text-white/80" },
-                        { label: "Completed", value: String(completedJobs), icon: CheckCircle, color: "text-green-400/80" },
+                        { label: "Total Volume Out", value: `$${totalSent.toFixed(2)}`, icon: TrendingUp, color: "text-blue-400" },
+                        { label: "Accumulated Earnings", value: `$${totalEarned.toFixed(2)}`, icon: Coins, color: "text-amber-400" },
+                        { label: "Active Project Count", value: String(activeJobs), icon: Clock, color: "text-white" },
+                        { label: "Total Finalized", value: String(completedJobs), icon: CheckCircle, color: "text-emerald-400" },
                     ].map(({ label, value, icon: Icon, color }) => (
-                        <div key={label} className="relative p-6 liquid-glass-strong glow-ring noise rounded-3xl transition-colors group">
-
-                            <Icon className={`h-5 w-5 mb-4 ${color}`} strokeWidth={1.5} />
-                            <p className="text-3xl font-light text-white tracking-tight">{value}</p>
-                            <p className="text-xs text-white/40 mt-2 uppercase tracking-widest font-medium">{label}</p>
+                        <div key={label} className="relative p-8 bg-zinc-900/40 border border-white/10 rounded-3xl transition-all group hover:bg-zinc-900/60 shadow-2xl backdrop-blur-md">
+                            <div className={`p-2 w-fit bg-white/5 rounded-lg mb-6 group-hover:scale-110 transition-transform`}>
+                                <Icon className={`h-4 w-4 ${color}`} strokeWidth={1.5} />
+                            </div>
+                            <p className="text-4xl font-light text-white tracking-tightest mb-2">{value}</p>
+                            <p className="text-[9px] text-white/30 uppercase tracking-[0.25em] font-bold">{label}</p>
                         </div>
                     ))}
                 </motion.div>
 
 
-                {activeJobs_client.length > 0 && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                        className="p-5 bg-amber-500/5 border border-amber-500/20 flex items-start gap-4 relative">
-                        <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-amber-500/50"></div>
-                        <AlertCircle className="h-5 w-5 text-amber-500/80 shrink-0 mt-0.5" strokeWidth={1.5} />
-                        <div>
-                            <p className="text-sm text-amber-500/90 font-light tracking-wide leading-relaxed">
-                                You have {activeJobs_client.length} active project{activeJobs_client.length > 1 ? "s" : ""} you are funding.
-                                {activeJobs_client.some(j => j.status === "ADVANCED") &&
-                                    " Note: One or more projects are awaiting your final approval to release the remaining payment."}
-                            </p>
+                {/* Dashboard Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                    
+                    {/* Left Column: Main Content */}
+                    <div className="lg:col-span-8 flex flex-col gap-10">
+                        {activeJobs_client.length > 0 && (
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                                className="p-6 bg-amber-500/5 border border-amber-500/10 rounded-3xl flex items-start gap-4 relative overflow-hidden group">
+                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500/40" />
+                                <AlertCircle className="h-5 w-5 text-amber-500/80 shrink-0 mt-0.5" strokeWidth={1.5} />
+                                <div>
+                                    <p className="text-[13px] text-amber-500/90 font-light tracking-wide leading-relaxed">
+                                        You have {activeJobs_client.length} active project{activeJobs_client.length > 1 ? "s" : ""} awaiting funding or approval.
+                                        {activeJobs_client.some(j => j.status === "ADVANCED") &&
+                                            " One or more projects are ready for final payout."}
+                                    </p>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        <div className="flex flex-col gap-8">
+                            <div className="flex gap-4 border-b border-white/5">
+                                {([
+                                    { key: "client", label: `Hiring Intent (${clientJobs.length})` },
+                                    { key: "freelancer", label: `Service Provider (${freelancerJobs.length})` },
+                                ] as const).map(({ key, label }) => (
+                                    <button
+                                        key={key}
+                                        onClick={() => setActiveTab(key)}
+                                        className={`px-8 py-5 text-[10px] font-bold uppercase tracking-[0.25em] transition-all border-b-2 -mb-[1px] ${activeTab === key
+                                            ? "border-white text-white opacity-100"
+                                            : "border-transparent text-white/20 hover:text-white/60"
+                                            }`}
+                                    >
+                                        {label}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {loading ? (
+                                <div className="p-20 flex items-center justify-center">
+                                    <Loader2 className="h-6 w-6 text-white/30 animate-spin" />
+                                </div>
+                            ) : activeTab === "client" ? (
+                                clientJobs.length === 0 ? (
+                                    <div className="p-20 flex flex-col items-center justify-center bg-zinc-900/40 border border-white/10 rounded-[2.5rem] text-center">
+                                        <Briefcase className="h-10 w-10 text-white/10 mb-6" strokeWidth={1} />
+                                        <p className="text-white/40 text-sm font-light tracking-wide mb-8">No active hiring projects found.</p>
+                                        <a href="/client" className="px-6 py-3 bg-white/[0.03] border border-white/10 rounded-xl text-[10px] font-bold uppercase tracking-widest text-white/60 hover:text-white transition-all">
+                                            Start a Project
+                                        </a>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col gap-6">
+                                        {clientJobs.map(job => (
+                                            <JobCard key={job.id} job={job} role="client" />
+                                        ))}
+                                    </div>
+                                )
+                            ) : (
+                                freelancerJobs.length === 0 ? (
+                                    <div className="p-20 flex flex-col items-center justify-center bg-zinc-900/40 border border-white/10 rounded-[2.5rem] text-center">
+                                        <Coins className="h-10 w-10 text-white/10 mb-6" strokeWidth={1} />
+                                        <p className="text-white/40 text-sm font-light tracking-wide mb-8">No freelance assignments found.</p>
+                                        <a href="/freelancer" className="px-6 py-3 bg-white/[0.03] border border-white/10 rounded-xl text-[10px] font-bold uppercase tracking-widest text-white/60 hover:text-white transition-all">
+                                            View Opportunities
+                                        </a>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col gap-6">
+                                        {freelancerJobs.map(job => (
+                                            <JobCard key={job.id} job={job} role="freelancer" />
+                                        ))}
+                                    </div>
+                                )
+                            )}
                         </div>
-                    </motion.div>
-                )}
-
-
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}
-                    className="flex flex-col gap-8">
-
-                    <div className="flex gap-2 border-b border-white/10">
-                        {([
-                            { key: "client", label: `Hiring (${clientJobs.length})` },
-                            { key: "freelancer", label: `Freelance Work (${freelancerJobs.length})` },
-                        ] as const).map(({ key, label }) => (
-                            <button
-                                key={key}
-                                onClick={() => setActiveTab(key)}
-                                className={`px-6 py-4 text-sm font-light tracking-wide transition-all border-b-2 -mb-[1px] ${activeTab === key
-                                    ? "border-white text-white"
-                                    : "border-transparent text-white/40 hover:text-white/80"
-                                    }`}
-                            >
-                                {label}
-                            </button>
-                        ))}
                     </div>
 
-                    {loading ? (
-                        <div className="p-20 flex items-center justify-center">
-                            <Loader2 className="h-6 w-6 text-white/30 animate-spin" />
+                    {/* Right Column: Sidebar Dashboard */}
+                    <div className="lg:col-span-4 flex flex-col gap-8">
+                        
+                        {/* Liquidity Snapshot Card */}
+                        <div className="bg-zinc-900/40 border border-white/10 rounded-[2.5rem] p-8 shadow-2xl backdrop-blur-md relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-110 transition-transform">
+                                <Zap className="w-20 h-20 text-white" />
+                            </div>
+                            <div className="relative z-10">
+                                <p className="text-[10px] text-white/30 uppercase tracking-[0.25em] font-bold mb-6">Quick Liquidity</p>
+                                <div className="space-y-1 mb-8">
+                                    <p className="text-4xl font-light text-white tracking-tightest">
+                                        ${totalEarned.toFixed(2)}
+                                    </p>
+                                    <p className="text-xs text-white/20 font-light uppercase tracking-widest">Available Earnings</p>
+                                </div>
+                                <a href="/freelancer" className="w-full py-4 bg-white/[0.05] border border-white/10 text-white text-[10px] font-bold uppercase tracking-[0.2em] rounded-2xl hover:bg-white/[0.08] transition-all flex items-center justify-center gap-3">
+                                    Manage Funds
+                                    <ArrowRight className="w-4 h-4" />
+                                </a>
+                            </div>
                         </div>
-                    ) : activeTab === "client" ? (
-                        clientJobs.length === 0 ? (
-                            <div className="p-20 flex flex-col items-center justify-center liquid-glass-strong noise rounded-3xl">
-                                <Briefcase className="h-8 w-8 text-white/20 mb-4" strokeWidth={1} />
-                                <p className="text-white/40 text-sm font-light tracking-wide">You haven't hired anyone yet.</p>
-                                <a href="/client" className="mt-4 text-xs font-medium uppercase tracking-widest text-white/60 hover:text-white transition-colors border-b border-white/20 pb-1">
-                                    Start a Project
-                                </a>
-                            </div>
-                        ) : (
-                            <div className="flex flex-col gap-4">
-                                {clientJobs.map(job => (
-                                    <JobCard key={job.id} job={job} role="client" />
+
+                        {/* Recent Global Activity */}
+                        <div className="bg-zinc-900/40 border border-white/10 rounded-[2.5rem] p-8 shadow-2xl backdrop-blur-md relative">
+                            <h3 className="text-[10px] text-white/30 uppercase tracking-[0.25em] font-bold mb-8">Global Activity Feed</h3>
+                            <div className="space-y-8">
+                                {allJobs.slice(0, 5).map((job, i) => (
+                                    <div key={job.id} className="relative pl-6 group">
+                                        <div className="absolute left-0 top-1.5 w-1.5 h-1.5 rounded-full bg-white/20 group-hover:bg-blue-400 transition-colors" />
+                                        <div className="absolute left-[2px] top-4 bottom-[-24px] w-[1px] bg-white/5 last:hidden" />
+                                        
+                                        <div className="space-y-1">
+                                            <p className="text-[13px] text-white/70 font-light leading-tight group-hover:text-white transition-colors">
+                                                {job.jobTitle}
+                                            </p>
+                                            <div className="flex items-center gap-3">
+                                                <span className={`text-[9px] font-bold uppercase tracking-widest ${
+                                                    job.status === 'RELEASED' ? 'text-emerald-400/60' : 'text-blue-400/60'
+                                                }`}>
+                                                    {job.status.replace('_', ' ')}
+                                                </span>
+                                                <span className="text-[9px] text-white/20 font-mono">
+                                                    {timeAgo(job.updatedAt || job.createdAt)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 ))}
+                                {allJobs.length === 0 && (
+                                    <p className="text-xs text-white/20 font-light italic">No recent activity detected.</p>
+                                )}
                             </div>
-                        )
-                    ) : (
-                        freelancerJobs.length === 0 ? (
-                            <div className="p-20 flex flex-col items-center justify-center liquid-glass-strong noise rounded-3xl">
-                                <Coins className="h-8 w-8 text-white/20 mb-4" strokeWidth={1} />
-                                <p className="text-white/40 text-sm font-light tracking-wide">No projects assigned to your wallet yet.</p>
-                                <a href="/freelancer" className="mt-4 text-xs font-medium uppercase tracking-widest text-white/60 hover:text-white transition-colors border-b border-white/20 pb-1">
-                                    View Dashboard
-                                </a>
+                        </div>
+
+                        {/* Profile Verification Card */}
+                        <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-[2.5rem] p-8 shadow-2xl backdrop-blur-md">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="p-2 bg-emerald-500/10 rounded-lg">
+                                    <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                                </div>
+                                <h3 className="text-[10px] text-emerald-500/60 uppercase tracking-[0.25em] font-bold">Verification</h3>
                             </div>
-                        ) : (
-                            <div className="flex flex-col gap-4">
-                                {freelancerJobs.map(job => (
-                                    <JobCard key={job.id} job={job} role="freelancer" />
-                                ))}
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs text-white/40 font-light">On-chain Identity</span>
+                                    <span className="text-[9px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-bold uppercase tracking-widest">Verified</span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs text-white/40 font-light">Dispute Rate</span>
+                                    <span className="text-[9px] text-white/60 font-mono">0.0%</span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs text-white/40 font-light">Network Standing</span>
+                                    <span className="text-[9px] text-white/60 font-mono">Top Tier</span>
+                                </div>
                             </div>
-                        )
-                    )}
-                </motion.div>
+                        </div>
+
+                    </div>
+                </div>
 
             </div>
         </div>

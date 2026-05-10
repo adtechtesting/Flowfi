@@ -211,4 +211,16 @@ export const signAndSendTx = async (
   return txId;
 };
 
-
+export const subscribeToEscrow = (
+  connection: Connection,
+  escrowPda: PublicKey,
+  callback: () => void
+) => {
+  return connection.onAccountChange(
+    escrowPda,
+    () => {
+      callback();
+    },
+    "confirmed"
+  );
+};
