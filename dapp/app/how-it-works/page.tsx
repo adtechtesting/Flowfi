@@ -87,7 +87,7 @@ export default function HowItWorksPage() {
                     </div>
                     <div className="flex flex-col gap-2">
                         <h1 className="text-5xl md:text-[72px] font-light text-white tracking-tight leading-tight">
-                            Get paid instantly.
+                            Access earnings earlier.
                         </h1>
                         <h2 className="text-4xl md:text-5xl font-light italic text-white/50 tracking-tight leading-tight">
                             Not in 30 days.

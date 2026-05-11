@@ -104,20 +104,24 @@ const logos = ["Dodo Payments", "Solana", "Transak", "Earn", "Phantom", "Superte
 // FAQ Data
 const faqs = [
   {
-    q: "Do clients need crypto?",
-    a: "No. Clients can pay using cards or bank transfers.",
+    q: "Is payment guaranteed?",
+    a: "Once funds are locked in escrow, the payment is secured on-chain and cannot disappear due to invoice delays.",
   },
   {
-    q: "How is the payment secured?",
-    a: "Funds are locked upfront and cannot be accessed until conditions are met.",
+    q: "Do clients need crypto knowledge?",
+    a: "No. Clients can pay using cards or bank transfers through familiar interfaces but they need a wallet to check the authorization of the profile.",
+  },
+  {
+    q: "What about disputes?",
+    a: "The remaining protected balance helps maintain accountability until project completion or settlement conditions are met.",
+  },
+  {
+    q: "How do I withdraw?",
+    a: "Withdraw earnings directly to your crypto wallet or local bank account through supported payout providers.",
   },
   {
     q: "What if the client doesn't respond?",
     a: "The remaining amount is automatically released after the set timeline unless a dispute is raised.",
-  },
-  {
-    q: "Can I withdraw to my bank account?",
-    a: "Yes. You can withdraw your earnings through integrated payout providers.",
   },
 ];
 
@@ -133,7 +137,7 @@ export default function LandingPage() {
           loop
           muted
           playsInline
-          className="absolute inset-0 h-full w-full object-cover z-0"
+          className="absolute inset-0 h-full w-full object-cover z-4"
         >
           <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260423_084718_72a17915-4964-4059-afcd-22d59399b72e.mp4" type="video/mp4" />
         </video>
@@ -154,8 +158,8 @@ export default function LandingPage() {
 
                 <FadeIn delay={1200} duration={800}>
                   <h2 className="text-xl md:text-2xl font-light text-white/70 tracking-tight mt-6">
-                    FlowFi locks client payments upfront so freelancers can <br className="hidden md:block" />
-                    access <span className="text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">85% instantly</span> — not weeks later.
+                    FlowFi secures client payments upfront so freelancers can <br className="hidden md:block" />
+                    access <span className="text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]"> earnings instantly</span> — not weeks later.
                   </h2>
                 </FadeIn>
               </div>
@@ -380,7 +384,7 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-2 gap-5">
             {[
               { id: "01", icon: ShieldCheck, title: "Secured Upfront", desc: "Once a job is funded, the money is secured — and most of it becomes available immediately.", points: ["No risk of non-payment", "Verifiable transaction flow"] },
-              { id: "02", icon: Zap, title: "Partial Payouts", desc: "Partial payout improves liquidity without removing accountability.", points: ["Better cash flow from day one", "Keeps payment moving"] },
+              { id: "02", icon: Zap, title: "Partial Payouts", desc: "Partial payouts improve cash flow while keeping settlement accountability intact.", points: ["Better cash flow from day one", "Keeps payment moving"] },
               { id: "03", icon: Globe, title: "Real-world Payouts", desc: "Freelancers can withdraw their earnings directly to their bank accounts through providers like Transak.", points: ["No need to understand crypto", "Just get paid"] },
               { id: "04", icon: Coins, title: "Protected Settlement", desc: "The remaining amount stays protected until completion.", points: ["Timeline-based release", "Prevents stuck funds"] }
             ].map((s, i) => (
@@ -492,7 +496,7 @@ export default function LandingPage() {
                   </li>
                   <li className="flex items-start gap-4">
                     <span className="w-2 h-2 rounded-full bg-blue-500 mt-2 shadow-[0_0_10px_rgba(59,130,246,0.5)] shrink-0" />
-                    <span>No Chargebacks. No Reversals.</span>
+                    <span>Escrow-backed settlement reduces payment uncertainty and reversal risk.</span>
                   </li>
                 </ul>
               </div>
@@ -584,7 +588,7 @@ export default function LandingPage() {
             </SectionHeading>
             <Reveal delay={300}>
               <p className="text-gray-400 text-lg md:text-xl font-light tracking-wide leading-relaxed">
-                Withdraw to your bank in 1–2 hours. Works globally across India (INR), EU (EUR), Africa, and more.
+                Withdraw earnings directly to your bank account through supported payout providers.
                 <br /><br />
                 <span className="text-gray-200">Real-world bank payouts. Powered by Transak.</span>
               </p>
@@ -613,12 +617,7 @@ export default function LandingPage() {
                       className="w-full flex items-center justify-between gap-6 px-6 md:px-8 py-6 text-left relative z-20"
                     >
                       <span className="text-lg md:text-xl font-light tracking-tight text-gray-200 group-hover:text-white transition-colors">
-                        {[
-                          "Do clients need crypto?",
-                          "Is payment guaranteed?",
-                          "What about disputes?",
-                          "How do I withdraw?"
-                        ][i]}
+                        {f.q}
                       </span>
                       <span className={`shrink-0 w-8 h-8 rounded-full border border-white/20 flex items-center justify-center transition-transform duration-300 text-gray-400 group-hover:border-white/40 group-hover:text-white ${isOpen ? "rotate-45" : ""}`}>
                         +
@@ -627,12 +626,7 @@ export default function LandingPage() {
                     <div className="grid transition-all duration-500 ease-out relative z-20" style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}>
                       <div className="overflow-hidden">
                         <p className="px-6 md:px-8 pb-6 text-gray-400 leading-relaxed max-w-2xl font-light">
-                          {[
-                            "No. Clients can pay using cards or bank transfers. They use familiar methods while the network handles the security in the background.",
-                            "Yes — funds are secured in a Solana smart contract the moment the client pays.",
-                            "15% stays locked in the contract until the work is finalized or resolved.",
-                            "Directly to your bank account via Transak. Usually arrives in 1–2 hours."
-                          ][i]}
+                          {f.a}
                         </p>
                       </div>
                     </div>

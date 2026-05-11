@@ -4,10 +4,6 @@ import { fundEscrow } from "@/app/lib/solana/server";
 import { PublicKey } from "@solana/web3.js";
 
 export async function POST(req: Request) {
-  if (process.env.NODE_ENV === "production") {
-    return new NextResponse(null, { status: 404 });
-  }
-
   try {
     const { invoiceId } = await req.json();
 

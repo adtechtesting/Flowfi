@@ -5,3 +5,7 @@ dodo.md
 escrow.md
 implementation.md
 backend-key.json
+.env 
+node_modules 
+test-ledger
+

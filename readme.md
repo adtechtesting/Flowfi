@@ -4,6 +4,8 @@
 
 FlowFi is a stablecoin-powered payment infrastructure platform built on Solana that helps freelancers and small businesses access their earnings immediately instead of waiting through traditional invoice cycles.
 
+### **Live Check Here: [https://flowfi-payment.vercel.app/](https://flowfi-payment.vercel.app/)**
+
 ---
 
 # The “Net-30” Trap: Why Global Work is Broken
@@ -87,7 +89,7 @@ This protects both parties:
 
 Once payment is secured, freelancers can instantly access up to:
 
-# 85% of the payment immediately
+# Up to 85% of secured earnings becomes accessible immediately.
 
 without waiting weeks for invoice settlement.
 
